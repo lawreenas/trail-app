@@ -24,7 +24,8 @@ export interface TrailRoute {
   startPoint: { lat: number; lng: number };
   metrics: RouteMetrics;
   elevationProfile: ElevationPoint[];
-  geoJson: GeoJSON.Feature;
+  /** Lazy-loaded for public routes (fetched from /gpx/<filename> when selected). Always present for local admin uploads. */
+  geoJson?: GeoJSON.Feature;
   gpxFileName: string;
   source: 'public' | 'local';
   uploadedAt: string;

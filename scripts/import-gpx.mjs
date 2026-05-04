@@ -8,8 +8,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = join(__dirname, '..');
-const GPX_DIR = join(ROOT, 'data', 'gpx');
+const GPX_DIR = join(ROOT, 'public', 'gpx');
 const OUT = join(ROOT, 'public', 'routes-data.json');
+const PROFILE_TARGET_POINTS = 120; // downsample elevation profile
 
 // ─── minimal GPX parser ──────────────────────────────────────────────────────
 
@@ -103,6 +104,18 @@ function computeMetrics(coords) {
   };
 }
 
+// ─── elevation profile downsampling ──────────────────────────────────────────
+
+function downsampleProfile(profile, target) {
+  if (profile.length <= target) return profile;
+  const step = (profile.length - 1) / (target - 1);
+  const out = [];
+  for (let i = 0; i < target; i++) {
+    out.push(profile[Math.round(i * step)]);
+  }
+  return out;
+}
+
 // ─── difficulty (mirrors src/utils/difficultyClassifier.ts) ──────────────────
 
 function classify(metrics) {
@@ -145,6 +158,9 @@ for (const file of files) {
   const [startLng, startLat] = coords[0];
   const displayName = name || filenameFallback(file);
 
+  // Downsample elevation profile so the chart is fast and the JSON stays small
+  const downsampled = downsampleProfile(elevationProfile, PROFILE_TARGET_POINTS);
+
   const route = {
     id: randomUUID(),
     name: displayName,
@@ -154,12 +170,9 @@ for (const file of files) {
     tags: [],
     startPoint: { lat: startLat, lng: startLng },
     metrics,
-    elevationProfile,
-    geoJson: {
-      type: 'Feature',
-      geometry: { type: 'LineString', coordinates: coords },
-      properties: {},
-    },
+    elevationProfile: downsampled,
+    // Note: full geometry is intentionally NOT embedded here — it's lazy-loaded
+    // from /gpx/<filename> at the moment a route is selected.
     gpxFileName: file,
     uploadedAt: now,
     updatedAt: now,

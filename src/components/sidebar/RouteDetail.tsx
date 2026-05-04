@@ -4,6 +4,7 @@ import { DifficultyBadge } from '../ui/DifficultyBadge';
 import { StatItem } from '../ui/StatItem';
 import { ElevationChart } from './ElevationChart';
 import { formatDistance, formatElevation, formatTime } from '../../utils/formatters';
+import { gpxUrl } from '../../services/gpxLoader';
 
 const COLORS: Record<string, string> = {
   easy: '#22c55e',
@@ -99,12 +100,22 @@ export function RouteDetail() {
           </div>
         )}
 
-        <div className="text-xs text-gray-500 pb-2">
-          File: {route.gpxFileName}
-          {route.source === 'local' && (
-            <span className="ml-2 text-yellow-500">● Unpublished</span>
-          )}
-        </div>
+        {route.source === 'public' ? (
+          <a
+            href={gpxUrl(route.gpxFileName)}
+            download={route.gpxFileName}
+            className="flex items-center justify-center gap-2 w-full bg-surface-raised hover:bg-surface-overlay text-white text-sm font-medium rounded-xl py-2.5 transition-colors border border-surface-overlay"
+          >
+            <span>⬇</span>
+            <span>Download GPX</span>
+          </a>
+        ) : (
+          <div className="text-xs text-yellow-500 text-center bg-yellow-500/10 rounded-lg px-3 py-2">
+            ● Unpublished — export to make this route downloadable
+          </div>
+        )}
+
+        <div className="text-xs text-gray-500 pb-2 truncate">{route.gpxFileName}</div>
       </div>
     </motion.div>
   );
