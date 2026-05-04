@@ -3,7 +3,6 @@
 
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, basename } from 'node:path';
-import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -212,8 +211,12 @@ for (const file of files) {
   // Downsample elevation profile so the chart is fast and the JSON stays small
   const downsampled = downsampleProfile(elevationProfile, PROFILE_TARGET_POINTS);
 
+  // Stable id derived from filename so re-imports don't break share links or
+  // metadata edits that key off the route id.
+  const id = basename(file, '.gpx');
+
   const route = {
-    id: randomUUID(),
+    id,
     name: displayName,
     description: '',
     difficulty,
