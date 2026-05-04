@@ -71,6 +71,9 @@ export interface AppStore {
   isAdminAuthenticated: boolean;
   mapTheme: MapTheme;
   setMapTheme: (theme: MapTheme) => void;
+  /** Lng/Lat of the elevation-chart hover position, or null when not hovering. */
+  chartHoverPoint: LngLat | null;
+  setChartHoverPoint: (point: LngLat | null) => void;
   loadRoutes: () => Promise<void>;
   selectRoute: (id: string | null) => void;
   hoverRoute: (id: string | null) => void;

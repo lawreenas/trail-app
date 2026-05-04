@@ -6,6 +6,7 @@ import { useAppStore } from '../../store/useAppStore';
 import type { MapTheme } from '../../types';
 import { StartMarkersLayer } from './StartMarkersLayer';
 import { AllTracksLayer } from './AllTracksLayer';
+import { ChartHoverMarker } from './ChartHoverMarker';
 
 const TILE_BY_THEME: Record<MapTheme, { url: string; bg: string }> = {
   // CartoDB Dark Matter — pushed toward mid-grey via CSS filter in index.css
@@ -91,6 +92,7 @@ export function TrailMap() {
         <ZoomControl position="bottomleft" />
         <MapController />
         <AllTracksLayer />
+        <ChartHoverMarker />
         <StartMarkersLayer />
       </MapContainer>
     </div>

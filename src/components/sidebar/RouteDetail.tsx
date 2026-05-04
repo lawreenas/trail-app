@@ -18,11 +18,13 @@ const COLORS: Record<string, string> = {
 export function RouteDetail() {
   const selectedRouteId = useAppStore((s) => s.selectedRouteId);
   const routes = useAppStore((s) => s.routes);
+  const tracks = useAppStore((s) => s.tracks);
   const selectRoute = useAppStore((s) => s.selectRoute);
   const setSidebarMode = useAppStore((s) => s.setSidebarMode);
 
   const route = routes.find((r) => r.id === selectedRouteId);
   if (!route) return null;
+  const trackCoords = tracks[route.id];
 
   const color = COLORS[route.difficulty];
 
@@ -78,7 +80,11 @@ export function RouteDetail() {
         {route.elevationProfile.length > 0 && (
           <div className="bg-surface-raised rounded-xl p-3">
             <div className="text-xs text-gray-400 mb-1">Elevation profile</div>
-            <ElevationChart data={route.elevationProfile} color={color} />
+            <ElevationChart
+              data={route.elevationProfile}
+              color={color}
+              trackCoords={trackCoords}
+            />
           </div>
         )}
 

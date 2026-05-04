@@ -43,11 +43,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
   sidebarMode: 'list',
   isAdminAuthenticated: false,
   mapTheme: readInitialMapTheme(),
+  chartHoverPoint: null,
 
   setMapTheme: (theme) => {
     set({ mapTheme: theme });
     try { localStorage.setItem(MAP_THEME_KEY, theme); } catch { /* ignore */ }
   },
+
+  setChartHoverPoint: (point) => set({ chartHoverPoint: point }),
 
   loadRoutes: async () => {
     set({ isLoading: true, loadError: null });
