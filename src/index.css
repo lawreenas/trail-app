@@ -8,9 +8,16 @@
   }
 }
 
-/* Leaflet custom styles for dark theme */
+/* Leaflet custom styles — "Shades of Grey" tonal pass.
+   Carto Dark Matter is too pitch-black; lifting brightness, killing most
+   saturation, and softening contrast nudges it toward a mid-grey palette
+   close to the Snazzy Maps "Shades of Grey" feel while keeping tile data. */
 .leaflet-container {
-  background: #1c1c1e;
+  background: #2e2f31;
+}
+
+.leaflet-tile-pane {
+  filter: brightness(1.55) saturate(0.25) contrast(0.92);
 }
 
 .leaflet-tooltip {

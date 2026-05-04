@@ -73,7 +73,7 @@ export function TrailMap() {
       zoomControl={false}
       preferCanvas={true}
       className="h-full w-full"
-      style={{ background: '#1c1c1e' }}
+      style={{ background: '#2e2f31' }}
     >
       <TileLayer url={TILE_URL} attribution={ATTRIBUTION} maxZoom={19} />
       <ZoomControl position="bottomleft" />
