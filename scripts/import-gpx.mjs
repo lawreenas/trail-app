@@ -9,8 +9,10 @@ import { fileURLToPath } from 'node:url';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = join(__dirname, '..');
 const GPX_DIR = join(ROOT, 'public', 'gpx');
-const OUT = join(ROOT, 'public', 'routes-data.json');
+const OUT_DATA = join(ROOT, 'public', 'routes-data.json');
+const OUT_TRACKS = join(ROOT, 'public', 'routes-tracks.json');
 const PROFILE_TARGET_POINTS = 120; // downsample elevation profile
+const TRACK_SIMPLIFY_TOLERANCE = 0.00006; // ~6m at this latitude — keeps shape, drops detail
 
 // ─── minimal GPX parser ──────────────────────────────────────────────────────
 
@@ -116,6 +118,52 @@ function downsampleProfile(profile, target) {
   return out;
 }
 
+// ─── geometry simplification (Douglas-Peucker) ───────────────────────────────
+
+function perpendicularDistance(point, lineStart, lineEnd) {
+  const [x, y] = point;
+  const [x1, y1] = lineStart;
+  const [x2, y2] = lineEnd;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len2 = dx * dx + dy * dy;
+  if (len2 === 0) return Math.hypot(x - x1, y - y1);
+  let t = ((x - x1) * dx + (y - y1) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy));
+}
+
+// Iterative Douglas-Peucker (avoids stack overflow on long tracks)
+function douglasPeucker(points, tolerance) {
+  if (points.length < 3) return points.slice();
+  const keep = new Uint8Array(points.length);
+  keep[0] = 1;
+  keep[points.length - 1] = 1;
+  const stack = [[0, points.length - 1]];
+  while (stack.length) {
+    const [first, last] = stack.pop();
+    let maxDist = 0;
+    let maxIdx = -1;
+    for (let i = first + 1; i < last; i++) {
+      const d = perpendicularDistance(points[i], points[first], points[last]);
+      if (d > maxDist) { maxDist = d; maxIdx = i; }
+    }
+    if (maxDist > tolerance && maxIdx !== -1) {
+      keep[maxIdx] = 1;
+      stack.push([first, maxIdx], [maxIdx, last]);
+    }
+  }
+  const out = [];
+  for (let i = 0; i < points.length; i++) if (keep[i]) out.push(points[i]);
+  return out;
+}
+
+function simplifyTrack(coords, tolerance) {
+  // Strip elevation (not needed for the overview track) and run DP on [lng, lat]
+  const flat = coords.map(([lng, lat]) => [lng, lat]);
+  return douglasPeucker(flat, tolerance);
+}
+
 // ─── difficulty (mirrors src/utils/difficultyClassifier.ts) ──────────────────
 
 function classify(metrics) {
@@ -142,7 +190,10 @@ const files = (await readdir(GPX_DIR)).filter((f) => f.toLowerCase().endsWith('.
 console.log(`Processing ${files.length} GPX files…\n`);
 
 const routes = [];
+const tracks = {};
 const now = new Date().toISOString();
+let totalRawPoints = 0;
+let totalKeptPoints = 0;
 
 for (const file of files) {
   const xml = await readFile(join(GPX_DIR, file), 'utf8');
@@ -178,15 +229,31 @@ for (const file of files) {
     updatedAt: now,
   };
 
+  // Simplified track for the overview map (one record per route)
+  const simplified = simplifyTrack(coords, TRACK_SIMPLIFY_TOLERANCE);
+  tracks[route.id] = simplified;
+  totalRawPoints += coords.length;
+  totalKeptPoints += simplified.length;
+
   routes.push(route);
-  console.log(`  ✓ ${displayName.padEnd(45)} ${metrics.distanceKm}km  ↑${metrics.elevationGainM}m  [${difficulty}]`);
+  console.log(
+    `  ✓ ${displayName.padEnd(45)} ${metrics.distanceKm}km  ↑${metrics.elevationGainM}m  [${difficulty}]  pts ${coords.length}→${simplified.length}`
+  );
 }
 
-const output = {
+const dataOut = {
   version: 1,
   exportedAt: now,
   routes: routes.sort((a, b) => a.name.localeCompare(b.name)),
 };
 
-await writeFile(OUT, JSON.stringify(output, null, 2));
+const tracksOut = {
+  version: 1,
+  exportedAt: now,
+  tracks,
+};
+
+await writeFile(OUT_DATA, JSON.stringify(dataOut, null, 2));
+await writeFile(OUT_TRACKS, JSON.stringify(tracksOut)); // no pretty-print → smaller
 console.log(`\nWrote ${routes.length} routes → public/routes-data.json`);
+console.log(`Wrote ${Object.keys(tracks).length} tracks → public/routes-tracks.json (${totalRawPoints} → ${totalKeptPoints} points, ${Math.round(100 * (1 - totalKeptPoints / totalRawPoints))}% reduction)`);

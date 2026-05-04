@@ -2,7 +2,18 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/shallow';
 import { loadAllRoutes } from '../services/dataLoader';
 import { upsertLocalRoute, deleteLocalRoute } from '../services/routeStorage';
-import type { AppStore, FilterState, TrailRoute } from '../types';
+import { simplifyTrack } from '../utils/simplify';
+import type { AppStore, FilterState, LngLat, TrailRoute } from '../types';
+
+const LOCAL_TRACK_TOLERANCE = 0.00006;
+
+function trackForRoute(route: TrailRoute): LngLat[] | null {
+  if (!route.geoJson || route.geoJson.geometry.type !== 'LineString') return null;
+  const coords = (route.geoJson.geometry.coordinates as number[][]).map(
+    ([lng, lat]) => [lng, lat] as LngLat
+  );
+  return simplifyTrack(coords, LOCAL_TRACK_TOLERANCE);
+}
 
 const DEFAULT_FILTERS: FilterState = {
   search: '',
@@ -14,6 +25,7 @@ const DEFAULT_FILTERS: FilterState = {
 
 export const useAppStore = create<AppStore>((set, get) => ({
   routes: [],
+  tracks: {},
   isLoading: false,
   loadError: null,
   selectedRouteId: null,
@@ -25,8 +37,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   loadRoutes: async () => {
     set({ isLoading: true, loadError: null });
     try {
-      const routes = await loadAllRoutes();
-      set({ routes, isLoading: false });
+      const { routes, tracks } = await loadAllRoutes();
+      set({ routes, tracks, isLoading: false });
     } catch (err) {
       set({ loadError: String(err), isLoading: false });
     }
@@ -49,17 +61,23 @@ export const useAppStore = create<AppStore>((set, get) => ({
         existing >= 0
           ? state.routes.map((r) => (r.id === route.id ? route : r))
           : [...state.routes, route].sort((a, b) => a.name.localeCompare(b.name));
-      return { routes };
+      const track = trackForRoute(route);
+      const tracks = track ? { ...state.tracks, [route.id]: track } : state.tracks;
+      return { routes, tracks };
     });
   },
 
   deleteRoute: async (id: string) => {
     await deleteLocalRoute(id);
-    set((state) => ({
-      routes: state.routes.filter((r) => r.id !== id),
-      selectedRouteId: state.selectedRouteId === id ? null : state.selectedRouteId,
-      sidebarMode: state.selectedRouteId === id ? 'list' : state.sidebarMode,
-    }));
+    set((state) => {
+      const { [id]: _removed, ...tracks } = state.tracks;
+      return {
+        routes: state.routes.filter((r) => r.id !== id),
+        tracks,
+        selectedRouteId: state.selectedRouteId === id ? null : state.selectedRouteId,
+        sidebarMode: state.selectedRouteId === id ? 'list' : state.sidebarMode,
+      };
+    });
   },
 
   setSidebarMode: (mode) => set({ sidebarMode: mode }),

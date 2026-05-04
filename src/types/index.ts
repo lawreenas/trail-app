@@ -38,6 +38,16 @@ export interface RoutesDataFile {
   routes: Omit<TrailRoute, 'source'>[];
 }
 
+/** Lng/Lat pair (GeoJSON convention). */
+export type LngLat = [number, number];
+
+/** Pre-simplified track geometry for the overview map. Keyed by route id. */
+export interface TracksDataFile {
+  version: number;
+  exportedAt: string;
+  tracks: Record<string, LngLat[]>;
+}
+
 export interface FilterState {
   search: string;
   difficulties: Difficulty[];
@@ -48,6 +58,8 @@ export interface FilterState {
 
 export interface AppStore {
   routes: TrailRoute[];
+  /** Simplified track geometry per route id, used to draw all trails on the overview map. */
+  tracks: Record<string, LngLat[]>;
   isLoading: boolean;
   loadError: string | null;
   selectedRouteId: string | null;

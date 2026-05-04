@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { CircleMarker, Tooltip } from 'react-leaflet';
 import { useAppStore } from '../../store/useAppStore';
 import type { TrailRoute } from '../../types';
@@ -13,36 +14,40 @@ interface Props {
   route: TrailRoute;
 }
 
-export function StartMarker({ route }: Props) {
-  const selectedRouteId = useAppStore((s) => s.selectedRouteId);
-  const hoveredRouteId = useAppStore((s) => s.hoveredRouteId);
+function StartMarkerImpl({ route }: Props) {
+  // Subscribe only to per-route booleans for minimal re-renders
+  const isSelected = useAppStore((s) => s.selectedRouteId === route.id);
+  const isHovered = useAppStore((s) => s.hoveredRouteId === route.id);
   const selectRoute = useAppStore((s) => s.selectRoute);
   const hoverRoute = useAppStore((s) => s.hoverRoute);
 
-  const isSelected = selectedRouteId === route.id;
-  const isHovered = hoveredRouteId === route.id;
+  const isActive = isSelected || isHovered;
   const color = COLORS[route.difficulty];
-  const radius = isSelected || isHovered ? 11 : 8;
+  const radius = isActive ? 9 : 5;
+
+  const eventHandlers = useMemo(() => ({
+    click: () => selectRoute(route.id),
+    mouseover: () => hoverRoute(route.id),
+    mouseout: () => hoverRoute(null),
+  }), [route.id, selectRoute, hoverRoute]);
 
   return (
     <CircleMarker
       center={[route.startPoint.lat, route.startPoint.lng]}
       radius={radius}
       pathOptions={{
-        color: '#ffffff',
-        weight: isSelected ? 3 : 2,
+        color: '#0b0b0c',
+        weight: isActive ? 2 : 1.5,
         fillColor: color,
-        fillOpacity: isSelected || isHovered ? 1 : 0.85,
+        fillOpacity: 1,
       }}
-      eventHandlers={{
-        click: () => selectRoute(route.id),
-        mouseover: () => hoverRoute(route.id),
-        mouseout: () => hoverRoute(null),
-      }}
+      eventHandlers={eventHandlers}
     >
-      <Tooltip direction="top" offset={[0, -10]} opacity={0.95}>
+      <Tooltip direction="top" offset={[0, -8]} opacity={0.95}>
         <div className="text-xs font-medium">{route.name}</div>
       </Tooltip>
     </CircleMarker>
   );
 }
+
+export const StartMarker = memo(StartMarkerImpl);
