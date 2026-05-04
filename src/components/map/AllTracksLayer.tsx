@@ -14,7 +14,6 @@ export function AllTracksLayer() {
           <TrackPolyline
             key={route.id}
             routeId={route.id}
-            difficulty={route.difficulty}
             coords={coords}
           />
         );

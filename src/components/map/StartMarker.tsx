@@ -3,12 +3,8 @@ import { CircleMarker, Tooltip } from 'react-leaflet';
 import { useAppStore } from '../../store/useAppStore';
 import type { TrailRoute } from '../../types';
 
-const COLORS: Record<string, string> = {
-  easy: '#22c55e',
-  moderate: '#f59e0b',
-  hard: '#f97316',
-  expert: '#ef4444',
-};
+const MARKER_COLOR = '#ff6b35'; // matches the unified track colour
+const MARKER_RADIUS = 7;        // constant — no resize on hover
 
 interface Props {
   route: TrailRoute;
@@ -22,8 +18,6 @@ function StartMarkerImpl({ route }: Props) {
   const hoverRoute = useAppStore((s) => s.hoverRoute);
 
   const isActive = isSelected || isHovered;
-  const color = COLORS[route.difficulty];
-  const radius = isActive ? 9 : 5;
 
   const eventHandlers = useMemo(() => ({
     click: () => selectRoute(route.id),
@@ -34,11 +28,11 @@ function StartMarkerImpl({ route }: Props) {
   return (
     <CircleMarker
       center={[route.startPoint.lat, route.startPoint.lng]}
-      radius={radius}
+      radius={MARKER_RADIUS}
       pathOptions={{
         color: '#0b0b0c',
-        weight: isActive ? 2 : 1.5,
-        fillColor: color,
+        weight: isActive ? 2.5 : 1.5,
+        fillColor: MARKER_COLOR,
         fillOpacity: 1,
       }}
       eventHandlers={eventHandlers}

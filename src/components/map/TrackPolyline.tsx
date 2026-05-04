@@ -2,22 +2,16 @@ import { memo, useMemo, useRef, useEffect } from 'react';
 import { Polyline } from 'react-leaflet';
 import type { LatLngExpression } from 'leaflet';
 import { useAppStore } from '../../store/useAppStore';
-import type { Difficulty, LngLat } from '../../types';
+import type { LngLat } from '../../types';
 
-const COLORS: Record<Difficulty, string> = {
-  easy: '#22c55e',
-  moderate: '#f59e0b',
-  hard: '#f97316',
-  expert: '#ef4444',
-};
+const TRACK_COLOR = '#ff6b35'; // unified accent — same for every trail
 
 interface Props {
   routeId: string;
-  difficulty: Difficulty;
   coords: LngLat[];
 }
 
-function TrackPolylineImpl({ routeId, difficulty, coords }: Props) {
+function TrackPolylineImpl({ routeId, coords }: Props) {
   // Each polyline subscribes only to its own hover/selected state — other store
   // changes don't re-render or restyle this polyline. Critical for smoothness.
   const isHovered = useAppStore((s) => s.hoveredRouteId === routeId);
@@ -50,7 +44,7 @@ function TrackPolylineImpl({ routeId, difficulty, coords }: Props) {
       ref={polylineRef}
       positions={positions}
       pathOptions={{
-        color: COLORS[difficulty],
+        color: TRACK_COLOR,
         weight: isActive ? 5 : 3,
         opacity: isActive ? 1 : 0.55,
         lineCap: 'round',
