@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "import-gpx": "node scripts/import-gpx.mjs"
   },
   "dependencies": {
     "@tmcw/togeojson": "^7.1.2",
