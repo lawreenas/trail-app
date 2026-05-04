@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "exportedAt": "2024-01-01T00:00:00.000Z",
+  "routes": [
+    {
+      "id": "sample-route-1",
+      "name": "Pavilniai Forest Loop",
+      "description": "A scenic loop through Pavilniai Regional Park along the Vilnia river. The trail winds through mixed forest with beautiful rock outcrops and a clear stream.",
+      "difficulty": "moderate",
+      "region": "Vilnius",
+      "tags": ["forest", "loop", "river"],
+      "startPoint": { "lat": 54.6700, "lng": 25.3350 },
+      "metrics": {
+        "distanceKm": 8.5,
+        "elevationGainM": 210,
+        "elevationLossM": 210,
+        "elevationMaxM": 185,
+        "elevationMinM": 95,
+        "estimatedTimeMin": 138
+      },
+      "elevationProfile": [
+        {"distanceKm": 0, "elevationM": 120},
+        {"distanceKm": 1, "elevationM": 145},
+        {"distanceKm": 2, "elevationM": 185},
+        {"distanceKm": 3, "elevationM": 160},
+        {"distanceKm": 4, "elevationM": 130},
+        {"distanceKm": 5, "elevationM": 95},
+        {"distanceKm": 6, "elevationM": 110},
+        {"distanceKm": 7, "elevationM": 130},
+        {"distanceKm": 8.5, "elevationM": 120}
+      ],
+      "geoJson": {
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [25.3350, 54.6700],
+            [25.3400, 54.6730],
+            [25.3450, 54.6760],
+            [25.3500, 54.6750],
+            [25.3520, 54.6720],
+            [25.3500, 54.6690],
+            [25.3470, 54.6670],
+            [25.3430, 54.6680],
+            [25.3390, 54.6695],
+            [25.3350, 54.6700]
+          ]
+        },
+        "properties": {}
+      },
+      "gpxFileName": "pavilniai-loop.gpx",
+      "uploadedAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sample-route-2",
+      "name": "Trakai Peninsula Trail",
+      "description": "Historic route around the Trakai peninsula with views of the famous island castle. Mostly flat with some gentle climbs on the western shore.",
+      "difficulty": "easy",
+      "region": "Trakai",
+      "tags": ["lake", "historic", "scenic"],
+      "startPoint": { "lat": 54.6381, "lng": 24.9340 },
+      "metrics": {
+        "distanceKm": 12.2,
+        "elevationGainM": 85,
+        "elevationLossM": 85,
+        "elevationMaxM": 145,
+        "elevationMinM": 115,
+        "estimatedTimeMin": 151
+      },
+      "elevationProfile": [
+        {"distanceKm": 0, "elevationM": 120},
+        {"distanceKm": 2, "elevationM": 130},
+        {"distanceKm": 4, "elevationM": 145},
+        {"distanceKm": 6, "elevationM": 135},
+        {"distanceKm": 8, "elevationM": 115},
+        {"distanceKm": 10, "elevationM": 125},
+        {"distanceKm": 12.2, "elevationM": 120}
+      ],
+      "geoJson": {
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [24.9340, 54.6381],
+            [24.9380, 54.6410],
+            [24.9420, 54.6430],
+            [24.9460, 54.6420],
+            [24.9480, 54.6390],
+            [24.9470, 54.6360],
+            [24.9440, 54.6340],
+            [24.9400, 54.6330],
+            [24.9360, 54.6345],
+            [24.9340, 54.6381]
+          ]
+        },
+        "properties": {}
+      },
+      "gpxFileName": "trakai-peninsula.gpx",
+      "uploadedAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sample-route-3",
+      "name": "Medininkai Highlands Ridge",
+      "description": "Challenging ridge run through the Medininkai uplands. Technical single-track with significant elevation changes and exposed rocky sections near the summit.",
+      "difficulty": "hard",
+      "region": "Medininkai",
+      "tags": ["ridge", "technical", "single-track"],
+      "startPoint": { "lat": 54.5470, "lng": 25.6010 },
+      "metrics": {
+        "distanceKm": 22.0,
+        "elevationGainM": 680,
+        "elevationLossM": 650,
+        "elevationMaxM": 293,
+        "elevationMinM": 145,
+        "estimatedTimeMin": 396
+      },
+      "elevationProfile": [
+        {"distanceKm": 0, "elevationM": 175},
+        {"distanceKm": 3, "elevationM": 220},
+        {"distanceKm": 6, "elevationM": 260},
+        {"distanceKm": 9, "elevationM": 293},
+        {"distanceKm": 12, "elevationM": 275},
+        {"distanceKm": 15, "elevationM": 245},
+        {"distanceKm": 18, "elevationM": 200},
+        {"distanceKm": 22, "elevationM": 165}
+      ],
+      "geoJson": {
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [25.6010, 54.5470],
+            [25.6080, 54.5510],
+            [25.6150, 54.5550],
+            [25.6220, 54.5580],
+            [25.6300, 54.5570],
+            [25.6360, 54.5540],
+            [25.6400, 54.5500],
+            [25.6430, 54.5460],
+            [25.6420, 54.5420],
+            [25.6380, 54.5390]
+          ]
+        },
+        "properties": {}
+      },
+      "gpxFileName": "medininkai-ridge.gpx",
+      "uploadedAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
