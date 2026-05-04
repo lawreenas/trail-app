@@ -3,10 +3,16 @@ import { MapContainer, TileLayer, ZoomControl, useMap } from 'react-leaflet';
 import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAppStore } from '../../store/useAppStore';
+import type { MapTheme } from '../../types';
 import { StartMarkersLayer } from './StartMarkersLayer';
 import { AllTracksLayer } from './AllTracksLayer';
 
-const TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const TILE_BY_THEME: Record<MapTheme, { url: string; bg: string }> = {
+  // CartoDB Dark Matter — pushed toward mid-grey via CSS filter in index.css
+  dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', bg: '#2e2f31' },
+  // CartoDB Positron — clean light/grey "Justin Map Trail" feel
+  light: { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', bg: '#f5f5f3' },
+};
 const ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
@@ -66,20 +72,27 @@ function MapController() {
 }
 
 export function TrailMap() {
+  const theme = useAppStore((s) => s.mapTheme);
+  const tile = TILE_BY_THEME[theme];
+
   return (
-    <MapContainer
-      center={DEFAULT_CENTER}
-      zoom={DEFAULT_ZOOM}
-      zoomControl={false}
-      preferCanvas={true}
-      className="h-full w-full"
-      style={{ background: '#2e2f31' }}
-    >
-      <TileLayer url={TILE_URL} attribution={ATTRIBUTION} maxZoom={19} />
-      <ZoomControl position="bottomleft" />
-      <MapController />
-      <AllTracksLayer />
-      <StartMarkersLayer />
-    </MapContainer>
+    <div data-map-theme={theme} className="h-full w-full">
+      <MapContainer
+        center={DEFAULT_CENTER}
+        zoom={DEFAULT_ZOOM}
+        zoomControl={false}
+        preferCanvas={true}
+        className="h-full w-full"
+        style={{ background: tile.bg }}
+      >
+        {/* keying on theme forces the TileLayer to remount with the new URL
+            so cached old-theme tiles don't flash through during the swap. */}
+        <TileLayer key={theme} url={tile.url} attribution={ATTRIBUTION} maxZoom={19} />
+        <ZoomControl position="bottomleft" />
+        <MapController />
+        <AllTracksLayer />
+        <StartMarkersLayer />
+      </MapContainer>
+    </div>
   );
 }

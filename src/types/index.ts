@@ -56,6 +56,8 @@ export interface FilterState {
   region: string | null;
 }
 
+export type MapTheme = 'dark' | 'light';
+
 export interface AppStore {
   routes: TrailRoute[];
   /** Simplified track geometry per route id, used to draw all trails on the overview map. */
@@ -67,6 +69,8 @@ export interface AppStore {
   filters: FilterState;
   sidebarMode: 'list' | 'detail';
   isAdminAuthenticated: boolean;
+  mapTheme: MapTheme;
+  setMapTheme: (theme: MapTheme) => void;
   loadRoutes: () => Promise<void>;
   selectRoute: (id: string | null) => void;
   hoverRoute: (id: string | null) => void;

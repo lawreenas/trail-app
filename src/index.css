@@ -8,50 +8,93 @@
   }
 }
 
-/* Leaflet custom styles — "Shades of Grey" tonal pass.
-   Carto Dark Matter is too pitch-black; lifting brightness, killing most
-   saturation, and softening contrast nudges it toward a mid-grey palette
-   close to the Snazzy Maps "Shades of Grey" feel while keeping tile data. */
+/* Default leaflet container background — overridden per theme below */
 .leaflet-container {
   background: #2e2f31;
 }
 
-.leaflet-tile-pane {
+/* Dark theme — "Shades of Grey" tonal pass over CartoDB Dark Matter.
+   Lift brightness, kill most saturation, soften contrast → mid-grey feel. */
+[data-map-theme="dark"] .leaflet-container {
+  background: #2e2f31;
+}
+[data-map-theme="dark"] .leaflet-tile-pane {
   filter: brightness(1.55) saturate(0.25) contrast(0.92);
 }
 
+/* Light theme — clean Justin-Map-Trail style on CartoDB Positron.
+   Slight desaturation + mild warmth to soften the cold default. */
+[data-map-theme="light"] .leaflet-container {
+  background: #f5f5f3;
+}
+[data-map-theme="light"] .leaflet-tile-pane {
+  filter: saturate(0.7) contrast(0.97);
+}
+
+/* Tooltip — themed */
 .leaflet-tooltip {
-  background: #2c2c2e;
-  border: 1px solid #3a3a3c;
-  color: #fff;
   border-radius: 8px;
   padding: 4px 8px;
   font-size: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
-
 .leaflet-tooltip::before {
   display: none;
 }
+[data-map-theme="dark"] .leaflet-tooltip {
+  background: #2c2c2e;
+  border: 1px solid #3a3a3c;
+  color: #fff;
+}
+[data-map-theme="light"] .leaflet-tooltip {
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  color: #1c1c1e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
 
+/* Zoom control — themed */
 .leaflet-control-zoom a {
-  background: #2c2c2e !important;
-  color: #fff !important;
-  border-color: #3a3a3c !important;
+  border-color: transparent !important;
 }
-
-.leaflet-control-zoom a:hover {
-  background: #3a3a3c !important;
-}
-
 .leaflet-bar {
   border-radius: 10px !important;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
 }
+[data-map-theme="dark"] .leaflet-control-zoom a {
+  background: #2c2c2e !important;
+  color: #fff !important;
+}
+[data-map-theme="dark"] .leaflet-control-zoom a:hover {
+  background: #3a3a3c !important;
+}
+[data-map-theme="light"] .leaflet-control-zoom a {
+  background: #ffffff !important;
+  color: #1c1c1e !important;
+}
+[data-map-theme="light"] .leaflet-control-zoom a:hover {
+  background: #f0f0f0 !important;
+}
+[data-map-theme="light"] .leaflet-bar {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
 
 .leaflet-attribution-flag {
   display: none !important;
+}
+
+/* Attribution panel readability per theme */
+[data-map-theme="dark"] .leaflet-control-attribution {
+  background: rgba(28, 28, 30, 0.75) !important;
+  color: #d1d5db !important;
+}
+[data-map-theme="dark"] .leaflet-control-attribution a {
+  color: #93c5fd !important;
+}
+[data-map-theme="light"] .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #4b5563 !important;
 }
 
 /* Scrollbar styling */

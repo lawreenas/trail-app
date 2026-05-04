@@ -1,5 +1,6 @@
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { TrailMap } from '../components/map/TrailMap';
+import { MapThemeToggle } from '../components/map/MapThemeToggle';
 import { Sidebar } from '../components/sidebar/Sidebar';
 import { BottomSheet } from '../components/mobile/BottomSheet';
 import { MobileContent } from '../components/mobile/MobileRouteDetail';
@@ -11,8 +12,9 @@ export function MapPage() {
   return (
     <div className="h-screen w-screen flex overflow-hidden bg-surface">
       <ErrorBoundary>
-        <div className={isDesktop ? 'flex-1 h-full' : 'absolute inset-0'}>
+        <div className={isDesktop ? 'relative flex-1 h-full' : 'absolute inset-0'}>
           <TrailMap />
+          <MapThemeToggle />
         </div>
       </ErrorBoundary>
 

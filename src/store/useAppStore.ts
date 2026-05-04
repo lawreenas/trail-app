@@ -3,9 +3,18 @@ import { useShallow } from 'zustand/shallow';
 import { loadAllRoutes } from '../services/dataLoader';
 import { upsertLocalRoute, deleteLocalRoute } from '../services/routeStorage';
 import { simplifyTrack } from '../utils/simplify';
-import type { AppStore, FilterState, LngLat, TrailRoute } from '../types';
+import type { AppStore, FilterState, LngLat, MapTheme, TrailRoute } from '../types';
 
 const LOCAL_TRACK_TOLERANCE = 0.00006;
+const MAP_THEME_KEY = 'trail-app:map-theme';
+
+function readInitialMapTheme(): MapTheme {
+  try {
+    const stored = localStorage.getItem(MAP_THEME_KEY);
+    if (stored === 'dark' || stored === 'light') return stored;
+  } catch { /* localStorage unavailable */ }
+  return 'dark';
+}
 
 function trackForRoute(route: TrailRoute): LngLat[] | null {
   if (!route.geoJson || route.geoJson.geometry.type !== 'LineString') return null;
@@ -33,6 +42,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
   filters: DEFAULT_FILTERS,
   sidebarMode: 'list',
   isAdminAuthenticated: false,
+  mapTheme: readInitialMapTheme(),
+
+  setMapTheme: (theme) => {
+    set({ mapTheme: theme });
+    try { localStorage.setItem(MAP_THEME_KEY, theme); } catch { /* ignore */ }
+  },
 
   loadRoutes: async () => {
     set({ isLoading: true, loadError: null });
