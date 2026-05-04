@@ -5,7 +5,6 @@ import 'leaflet/dist/leaflet.css';
 import { useAppStore } from '../../store/useAppStore';
 import { StartMarkersLayer } from './StartMarkersLayer';
 import { AllTracksLayer } from './AllTracksLayer';
-import { RouteLayer } from './RouteLayer';
 
 const TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 const ATTRIBUTION =
@@ -38,17 +37,26 @@ function MapController() {
     }
   }, [routes.length, tracks, map]);
 
-  // Smooth fly-to when a route is selected
+  // Smooth fit when a route is selected. flyToBounds re-renders the canvas
+  // every animation frame for ~900ms which fights with hover state — keep it
+  // short and use gentler easing.
   useEffect(() => {
     if (selectedRouteId && selectedRouteId !== prevId.current) {
       const coords = tracks[selectedRouteId];
       if (coords && coords.length) {
         const latLngs = coords.map(([lng, lat]) => [lat, lng] as L.LatLngExpression);
-        map.flyToBounds(L.latLngBounds(latLngs), {
-          padding: [60, 60],
-          duration: 0.9,
-          easeLinearity: 0.25,
-        });
+        const bounds = L.latLngBounds(latLngs);
+        const currentBounds = map.getBounds();
+        // If the route is already mostly in view, skip the animation entirely
+        if (currentBounds.contains(bounds)) {
+          map.fitBounds(bounds, { padding: [40, 40], animate: true, duration: 0.35 });
+        } else {
+          map.flyToBounds(bounds, {
+            padding: [40, 40],
+            duration: 0.55,
+            easeLinearity: 0.4,
+          });
+        }
       }
     }
     prevId.current = selectedRouteId;
@@ -71,7 +79,6 @@ export function TrailMap() {
       <ZoomControl position="bottomleft" />
       <MapController />
       <AllTracksLayer />
-      <RouteLayer />
       <StartMarkersLayer />
     </MapContainer>
   );

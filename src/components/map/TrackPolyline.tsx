@@ -33,18 +33,11 @@ function TrackPolylineImpl({ routeId, difficulty, coords }: Props) {
   const polylineRef = useRef<L.Polyline | null>(null);
   const isActive = isHovered || isSelected;
 
-  // Imperatively update style when hover/selected changes — avoids re-creating
-  // the layer (faster + no flicker) and bypasses any react-leaflet diff cost.
+  // Bring an active polyline above its neighbours so it isn't hidden when
+  // multiple trails overlap. Style itself is handled by pathOptions below.
   useEffect(() => {
-    const layer = polylineRef.current;
-    if (!layer) return;
-    layer.setStyle({
-      color: COLORS[difficulty],
-      weight: isActive ? 5 : 3,
-      opacity: isActive ? 1 : 0.6,
-    });
-    if (isActive) layer.bringToFront();
-  }, [isActive, difficulty]);
+    if (isActive) polylineRef.current?.bringToFront();
+  }, [isActive]);
 
   const eventHandlers = useMemo(() => ({
     mouseover: () => hover(routeId),
@@ -59,12 +52,9 @@ function TrackPolylineImpl({ routeId, difficulty, coords }: Props) {
       pathOptions={{
         color: COLORS[difficulty],
         weight: isActive ? 5 : 3,
-        opacity: isActive ? 1 : 0.6,
+        opacity: isActive ? 1 : 0.55,
         lineCap: 'round',
         lineJoin: 'round',
-        // Enlarged invisible hit area for forgiving hover detection
-        // (offset between visible stroke and hover-target stroke)
-        bubblingMouseEvents: false,
       }}
       eventHandlers={eventHandlers}
       interactive={true}
