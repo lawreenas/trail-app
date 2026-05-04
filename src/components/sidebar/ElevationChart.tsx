@@ -46,12 +46,14 @@ export function ElevationChart({ data, color, trackCoords }: Props) {
 
   if (data.length === 0) return null;
 
-  // Recharts' onMouseMove signature varies between versions; use a permissive
-  // shape and read the active payload's underlying datum.
+  // Recharts v3 passes MouseHandlerDataParam — activeLabel is the X value
+  // (our distanceKm). isTooltipActive tells us whether the cursor is over a
+  // data point. activePayload no longer exists at this level in v3.
   const handleMouseMove = (state: unknown) => {
-    const payload = (state as { activePayload?: Array<{ payload?: ElevationPoint }> })?.activePayload;
-    const km = payload?.[0]?.payload?.distanceKm;
-    if (km == null || !trackCoords || !cumKm) return;
+    const s = state as { activeLabel?: number | string; isTooltipActive?: boolean } | null;
+    if (!s || !s.isTooltipActive || s.activeLabel == null) return;
+    const km = typeof s.activeLabel === 'number' ? s.activeLabel : Number(s.activeLabel);
+    if (!Number.isFinite(km) || !trackCoords || !cumKm) return;
     const point = coordAtDistance(trackCoords, cumKm, km);
     if (point) setChartHoverPoint(point);
   };
