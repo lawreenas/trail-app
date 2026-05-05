@@ -20,7 +20,7 @@ export function UploadZone({ onParsed }: Props) {
     setIsProcessing(true);
     setError(null);
     try {
-      await new Promise((r) => setTimeout(r, 0)); // yield to UI
+      await new Promise((r) => setTimeout(r, 0));
       const parsed = await parseGpxFile(file);
       onParsed(parsed);
     } catch (err) {
@@ -39,20 +39,18 @@ export function UploadZone({ onParsed }: Props) {
 
   return (
     <div>
-      <div
-        className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors cursor-pointer ${
-          isDragging
-            ? 'border-accent bg-accent/10'
-            : 'border-surface-overlay hover:border-gray-500'
-        }`}
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
+        className={`w-full border border-dashed rounded-lg py-16 px-6 text-center transition-colors ${
+          isDragging
+            ? 'border-white/40 bg-white/[0.04]'
+            : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'
+        }`}
         aria-label="Upload GPX file"
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click(); }}
       >
         <input
           ref={inputRef}
@@ -61,13 +59,12 @@ export function UploadZone({ onParsed }: Props) {
           className="hidden"
           onChange={(e) => { if (e.target.files?.[0]) processFile(e.target.files[0]); }}
         />
-        <div className="text-4xl mb-3">{isProcessing ? '⏳' : '📁'}</div>
-        <p className="text-sm font-medium text-white">
-          {isProcessing ? 'Parsing GPX file…' : 'Drop a GPX file here'}
+        <p className="text-sm text-white">
+          {isProcessing ? 'Parsing…' : isDragging ? 'Drop to upload' : 'Drop a GPX file or click to browse'}
         </p>
-        <p className="text-xs text-gray-500 mt-1">or click to browse</p>
-      </div>
-      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+        <p className="text-xs text-gray-500 mt-1.5">.gpx only</p>
+      </button>
+      {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
     </div>
   );
 }

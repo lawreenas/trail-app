@@ -1,6 +1,8 @@
 import { CircleMarker } from 'react-leaflet';
 import { useAppStore } from '../../store/useAppStore';
 
+const PRIMARY = '#c4ff00';
+
 /**
  * "You are here" indicator that mirrors the elevation-chart hover position.
  * Subscribes only to chartHoverPoint, so it only re-renders when that changes.
@@ -11,27 +13,25 @@ export function ChartHoverMarker() {
   const [lng, lat] = point;
   return (
     <>
-      {/* Outer halo */}
       <CircleMarker
         center={[lat, lng]}
         radius={14}
         pathOptions={{
-          color: '#ff6b35',
-          weight: 2,
-          fillColor: '#ff6b35',
-          fillOpacity: 0.15,
+          color: PRIMARY,
+          weight: 1.5,
+          fillColor: PRIMARY,
+          fillOpacity: 0.18,
           interactive: false,
         }}
         interactive={false}
       />
-      {/* Inner dot */}
       <CircleMarker
         center={[lat, lng]}
-        radius={6}
+        radius={5}
         pathOptions={{
-          color: '#ffffff',
+          color: '#0d0d0e',
           weight: 2,
-          fillColor: '#ff6b35',
+          fillColor: PRIMARY,
           fillOpacity: 1,
           interactive: false,
         }}

@@ -1,28 +1,31 @@
-import { getAllLocalRoutes } from './routeStorage';
+import { getAllLocalRoutes, getAllLocalTags } from './routeStorage';
 import { simplifyTrack } from '../utils/simplify';
-import type { LngLat, RoutesDataFile, TracksDataFile, TrailRoute } from '../types';
+import type { LngLat, RoutesDataFile, TagDefinition, TracksDataFile, TrailRoute } from '../types';
 
 const LOCAL_TRACK_TOLERANCE = 0.00006; // matches scripts/import-gpx.mjs
 
 export interface LoadedData {
   routes: TrailRoute[];
   tracks: Record<string, LngLat[]>;
+  tagLibrary: TagDefinition[];
 }
 
 export async function loadAllRoutes(): Promise<LoadedData> {
   const base = import.meta.env.BASE_URL ?? '/';
 
-  // Fetch routes metadata and simplified tracks in parallel
-  const [dataRes, tracksRes, localRoutes] = await Promise.all([
+  const [dataRes, tracksRes, localRoutes, localTags] = await Promise.all([
     fetch(`${base}routes-data.json`).catch(() => null),
     fetch(`${base}routes-tracks.json`).catch(() => null),
     getAllLocalRoutes(),
+    getAllLocalTags(),
   ]);
 
   let publicRoutes: TrailRoute[] = [];
+  let publicTags: TagDefinition[] = [];
   if (dataRes && dataRes.ok) {
     const data: RoutesDataFile = await dataRes.json();
     publicRoutes = data.routes.map((r) => ({ ...r, source: 'public' as const }));
+    publicTags = data.tags ?? [];
   }
 
   const tracks: Record<string, LngLat[]> = {};
@@ -42,10 +45,16 @@ export async function loadAllRoutes(): Promise<LoadedData> {
   }
 
   // Merge: local overrides public by id
-  const merged = new Map<string, TrailRoute>();
-  for (const r of publicRoutes) merged.set(r.id, r);
-  for (const r of localRoutes) merged.set(r.id, r);
+  const mergedRoutes = new Map<string, TrailRoute>();
+  for (const r of publicRoutes) mergedRoutes.set(r.id, r);
+  for (const r of localRoutes) mergedRoutes.set(r.id, r);
 
-  const routes = Array.from(merged.values()).sort((a, b) => a.name.localeCompare(b.name));
-  return { routes, tracks };
+  const mergedTags = new Map<string, TagDefinition>();
+  for (const t of publicTags) mergedTags.set(t.name, t);
+  for (const t of localTags) mergedTags.set(t.name, t);
+
+  const routes = Array.from(mergedRoutes.values()).sort((a, b) => a.name.localeCompare(b.name));
+  const tagLibrary = Array.from(mergedTags.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+  return { routes, tracks, tagLibrary };
 }

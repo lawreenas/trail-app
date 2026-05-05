@@ -42,10 +42,12 @@ export async function parseGpxFile(file: File): Promise<Omit<TrailRoute, 'name' 
   return {
     id: uuid(),
     difficulty,
+    type: 'loop',
     startPoint: { lat: startLat, lng: startLng },
     metrics,
     elevationProfile,
     geoJson: lineFeature,
+    gpxText: text,
     gpxFileName: file.name,
     uploadedAt: now,
     updatedAt: now,

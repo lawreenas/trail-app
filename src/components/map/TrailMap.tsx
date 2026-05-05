@@ -7,15 +7,34 @@ import type { MapTheme } from '../../types';
 import { StartMarkersLayer } from './StartMarkersLayer';
 import { AllTracksLayer } from './AllTracksLayer';
 import { ChartHoverMarker } from './ChartHoverMarker';
+import { UserLocationLayer } from './UserLocationLayer';
 
-const TILE_BY_THEME: Record<MapTheme, { url: string; bg: string }> = {
-  // CartoDB Dark Matter — pushed toward mid-grey via CSS filter in index.css
-  dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', bg: '#2e2f31' },
-  // CartoDB Positron — clean light/grey "Justin Map Trail" feel
-  light: { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', bg: '#f5f5f3' },
+const TILE_BY_THEME: Record<MapTheme, { url: string; bg: string; attribution: string; maxZoom: number }> = {
+  dark: {
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    bg: '#1a1a1c',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: 19,
+  },
+  light: {
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    bg: '#f5f5f3',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: 19,
+  },
+  terrain: {
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    bg: '#d8d4c5',
+    attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
+    maxZoom: 17,
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    bg: '#0a0a0a',
+    attribution: 'Tiles &copy; Esri',
+    maxZoom: 18,
+  },
 };
-const ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 const DEFAULT_CENTER: [number, number] = [54.6872, 25.2797]; // Vilnius
 const DEFAULT_ZOOM = 11;
@@ -28,7 +47,6 @@ function MapController() {
   const prevId = useRef<string | null>(null);
   const didFitInitial = useRef(false);
 
-  // Initial fit-to-bounds: zoom out to show all tracks once on first load
   useEffect(() => {
     if (didFitInitial.current) return;
     if (!routes.length) return;
@@ -39,14 +57,11 @@ function MapController() {
       for (const [lng, lat] of coords) allLatLngs.push([lat, lng]);
     }
     if (allLatLngs.length) {
-      map.fitBounds(L.latLngBounds(allLatLngs), { padding: [40, 40], animate: false });
+      map.fitBounds(L.latLngBounds(allLatLngs), { padding: [60, 60], animate: false });
       didFitInitial.current = true;
     }
   }, [routes.length, tracks, map]);
 
-  // Smooth fit when a route is selected. flyToBounds re-renders the canvas
-  // every animation frame for ~900ms which fights with hover state — keep it
-  // short and use gentler easing.
   useEffect(() => {
     if (selectedRouteId && selectedRouteId !== prevId.current) {
       const coords = tracks[selectedRouteId];
@@ -54,12 +69,11 @@ function MapController() {
         const latLngs = coords.map(([lng, lat]) => [lat, lng] as L.LatLngExpression);
         const bounds = L.latLngBounds(latLngs);
         const currentBounds = map.getBounds();
-        // If the route is already mostly in view, skip the animation entirely
         if (currentBounds.contains(bounds)) {
-          map.fitBounds(bounds, { padding: [40, 40], animate: true, duration: 0.35 });
+          map.fitBounds(bounds, { padding: [60, 60], animate: true, duration: 0.35 });
         } else {
           map.flyToBounds(bounds, {
-            padding: [40, 40],
+            padding: [60, 60],
             duration: 0.55,
             easeLinearity: 0.4,
           });
@@ -86,13 +100,17 @@ export function TrailMap() {
         className="h-full w-full"
         style={{ background: tile.bg }}
       >
-        {/* keying on theme forces the TileLayer to remount with the new URL
-            so cached old-theme tiles don't flash through during the swap. */}
-        <TileLayer key={theme} url={tile.url} attribution={ATTRIBUTION} maxZoom={19} />
+        <TileLayer
+          key={theme}
+          url={tile.url}
+          attribution={tile.attribution}
+          maxZoom={tile.maxZoom}
+        />
         <ZoomControl position="bottomleft" />
         <MapController />
         <AllTracksLayer />
         <ChartHoverMarker />
+        <UserLocationLayer />
         <StartMarkersLayer />
       </MapContainer>
     </div>

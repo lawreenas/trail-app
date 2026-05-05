@@ -220,6 +220,7 @@ for (const file of files) {
     name: displayName,
     description: '',
     difficulty,
+    type: 'loop',
     region: 'Vilnius',
     tags: [],
     startPoint: { lat: startLat, lng: startLng },

@@ -1,19 +1,39 @@
+import { Moon, Sun, Mountain, Satellite } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import type { MapTheme } from '../../types';
+
+const THEMES: Array<{ id: MapTheme; label: string; Icon: typeof Moon }> = [
+  { id: 'dark', label: 'Dark', Icon: Moon },
+  { id: 'light', label: 'Light', Icon: Sun },
+  { id: 'terrain', label: 'Terrain', Icon: Mountain },
+  { id: 'satellite', label: 'Satellite', Icon: Satellite },
+];
 
 export function MapThemeToggle() {
   const theme = useAppStore((s) => s.mapTheme);
   const setTheme = useAppStore((s) => s.setMapTheme);
-  const next = theme === 'dark' ? 'light' : 'dark';
 
   return (
-    <button
-      type="button"
-      onClick={() => setTheme(next)}
-      aria-label={`Switch to ${next} map`}
-      title={`Switch to ${next} map`}
-      className="absolute top-4 left-4 z-[1000] flex items-center justify-center w-10 h-10 rounded-full bg-surface-raised/95 backdrop-blur border border-surface-overlay text-base text-white hover:bg-surface-overlay transition-colors shadow-lg"
-    >
-      <span aria-hidden="true">{theme === 'dark' ? '☀' : '🌙'}</span>
-    </button>
+    <div className="absolute top-4 right-4 z-[1000] flex items-center bg-black/60 backdrop-blur-md border border-white/10 rounded-md p-1 gap-0.5 shadow-xl">
+      {THEMES.map(({ id, label, Icon }) => {
+        const active = theme === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTheme(id)}
+            aria-label={`Switch to ${label} map`}
+            title={label}
+            className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
+              active
+                ? 'bg-primary text-primary-foreground'
+                : 'text-gray-300 hover:text-white hover:bg-white/[0.08]'
+            }`}
+          >
+            <Icon size={14} strokeWidth={2} />
+          </button>
+        );
+      })}
+    </div>
   );
 }

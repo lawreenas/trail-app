@@ -3,27 +3,34 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-feature-settings: 'ss01', 'cv01', 'cv11';
+  }
   body {
     @apply bg-surface text-white overflow-hidden;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .font-display {
+    font-family: 'Barlow Condensed', 'Space Grotesk', sans-serif;
+    letter-spacing: 0.02em;
   }
 }
 
 /* Default leaflet container background — overridden per theme below */
 .leaflet-container {
-  background: #2e2f31;
+  background: #1a1a1c;
 }
 
-/* Dark theme — "Shades of Grey" tonal pass over CartoDB Dark Matter.
-   Lift brightness, kill most saturation, soften contrast → mid-grey feel. */
 [data-map-theme="dark"] .leaflet-container {
-  background: #2e2f31;
+  background: #1a1a1c;
 }
 [data-map-theme="dark"] .leaflet-tile-pane {
-  filter: brightness(1.55) saturate(0.25) contrast(0.92);
+  filter: brightness(1.4) saturate(0.3) contrast(0.95);
 }
 
-/* Light theme — clean Justin-Map-Trail style on CartoDB Positron.
-   Slight desaturation + mild warmth to soften the cold default. */
 [data-map-theme="light"] .leaflet-container {
   background: #f5f5f3;
 }
@@ -31,43 +38,67 @@
   filter: saturate(0.7) contrast(0.97);
 }
 
+[data-map-theme="terrain"] .leaflet-container {
+  background: #d8d4c5;
+}
+[data-map-theme="terrain"] .leaflet-tile-pane {
+  filter: saturate(0.85) contrast(1.05);
+}
+
+[data-map-theme="satellite"] .leaflet-container {
+  background: #0a0a0a;
+}
+
 /* Tooltip — themed */
 .leaflet-tooltip {
-  border-radius: 8px;
-  padding: 4px 8px;
+  border-radius: 6px;
+  padding: 6px 10px;
   font-size: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  border: none !important;
 }
 .leaflet-tooltip::before {
   display: none;
 }
-[data-map-theme="dark"] .leaflet-tooltip {
-  background: #2c2c2e;
-  border: 1px solid #3a3a3c;
+[data-map-theme="dark"] .leaflet-tooltip,
+[data-map-theme="terrain"] .leaflet-tooltip,
+[data-map-theme="satellite"] .leaflet-tooltip {
+  background: rgba(13, 13, 14, 0.95);
+  backdrop-filter: blur(8px);
   color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 [data-map-theme="light"] .leaflet-tooltip {
-  background: #ffffff;
-  border: 1px solid #d4d4d8;
-  color: #1c1c1e;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+  color: #0d0d0e;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Zoom control — themed */
+/* Zoom control */
 .leaflet-control-zoom a {
   border-color: transparent !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 500 !important;
 }
 .leaflet-bar {
-  border-radius: 10px !important;
+  border-radius: 8px !important;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
-[data-map-theme="dark"] .leaflet-control-zoom a {
-  background: #2c2c2e !important;
+[data-map-theme="dark"] .leaflet-control-zoom a,
+[data-map-theme="terrain"] .leaflet-control-zoom a,
+[data-map-theme="satellite"] .leaflet-control-zoom a {
+  background: rgba(22, 22, 24, 0.95) !important;
+  backdrop-filter: blur(10px);
   color: #fff !important;
 }
-[data-map-theme="dark"] .leaflet-control-zoom a:hover {
-  background: #3a3a3c !important;
+[data-map-theme="dark"] .leaflet-control-zoom a:hover,
+[data-map-theme="terrain"] .leaflet-control-zoom a:hover,
+[data-map-theme="satellite"] .leaflet-control-zoom a:hover {
+  background: rgba(35, 35, 40, 0.98) !important;
 }
 [data-map-theme="light"] .leaflet-control-zoom a {
   background: #ffffff !important;
@@ -76,38 +107,92 @@
 [data-map-theme="light"] .leaflet-control-zoom a:hover {
   background: #f0f0f0 !important;
 }
-[data-map-theme="light"] .leaflet-bar {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-}
 
 .leaflet-attribution-flag {
   display: none !important;
 }
-
-/* Attribution panel readability per theme */
-[data-map-theme="dark"] .leaflet-control-attribution {
-  background: rgba(28, 28, 30, 0.75) !important;
-  color: #d1d5db !important;
+.leaflet-control-attribution {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 10px !important;
+  border-radius: 4px !important;
 }
-[data-map-theme="dark"] .leaflet-control-attribution a {
-  color: #93c5fd !important;
+[data-map-theme="dark"] .leaflet-control-attribution,
+[data-map-theme="terrain"] .leaflet-control-attribution,
+[data-map-theme="satellite"] .leaflet-control-attribution {
+  background: rgba(13, 13, 14, 0.7) !important;
+  color: #9ca3af !important;
+}
+[data-map-theme="dark"] .leaflet-control-attribution a,
+[data-map-theme="terrain"] .leaflet-control-attribution a,
+[data-map-theme="satellite"] .leaflet-control-attribution a {
+  color: #c4ff00 !important;
 }
 [data-map-theme="light"] .leaflet-control-attribution {
   background: rgba(255, 255, 255, 0.85) !important;
   color: #4b5563 !important;
 }
 
-/* Scrollbar styling */
+/* Pulsing ring around selected route's start marker.
+   Referenced via inline style on map DivIcons, so the @keyframes rule must
+   live here (Tailwind only emits keyframes when an animate-* class is used). */
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3a3a3c;
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4a4a4e;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Range slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  margin-top: -6px;
+  border: 2px solid #c4ff00;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.12s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+input[type="range"]::-moz-range-track {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1px;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #c4ff00;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }

@@ -1,21 +1,25 @@
 import { memo, useMemo, useRef, useEffect } from 'react';
-import { Polyline } from 'react-leaflet';
+import { Polyline, Tooltip } from 'react-leaflet';
 import type { LatLngExpression } from 'leaflet';
 import { useAppStore } from '../../store/useAppStore';
-import type { LngLat } from '../../types';
+import { formatDistance, formatElevation } from '../../utils/formatters';
+import type { LngLat, TrailRoute } from '../../types';
 
-const TRACK_COLOR = '#ff6b35'; // unified accent — same for every trail
+const COLOR_SELECTED = '#c4ff00'; // primary lime
+const COLOR_HOVERED = '#ffffff';
+const COLOR_DEFAULT = '#a3a3a8';
 
 interface Props {
   routeId: string;
   coords: LngLat[];
+  route: TrailRoute;
 }
 
-function TrackPolylineImpl({ routeId, coords }: Props) {
-  // Each polyline subscribes only to its own hover/selected state — other store
-  // changes don't re-render or restyle this polyline. Critical for smoothness.
+function TrackPolylineImpl({ routeId, coords, route }: Props) {
   const isHovered = useAppStore((s) => s.hoveredRouteId === routeId);
   const isSelected = useAppStore((s) => s.selectedRouteId === routeId);
+  const selectedRouteId = useAppStore((s) => s.selectedRouteId);
+  const showAllTracks = useAppStore((s) => s.showAllTracks);
   const hover = useAppStore((s) => s.hoverRoute);
   const select = useAppStore((s) => s.selectRoute);
 
@@ -26,9 +30,8 @@ function TrackPolylineImpl({ routeId, coords }: Props) {
 
   const polylineRef = useRef<L.Polyline | null>(null);
   const isActive = isHovered || isSelected;
+  const hasSelection = selectedRouteId != null;
 
-  // Bring an active polyline above its neighbours so it isn't hidden when
-  // multiple trails overlap. Style itself is handled by pathOptions below.
   useEffect(() => {
     if (isActive) polylineRef.current?.bringToFront();
   }, [isActive]);
@@ -39,20 +42,43 @@ function TrackPolylineImpl({ routeId, coords }: Props) {
     click: () => select(routeId),
   }), [routeId, hover, select]);
 
+  // When the "show all" toggle is off, only the selected track renders.
+  if (!showAllTracks && !isSelected) {
+    return null;
+  }
+
+  const color = isSelected ? COLOR_SELECTED : isHovered ? COLOR_HOVERED : COLOR_DEFAULT;
+  const weight = isSelected ? 5 : isHovered ? 4 : 2.5;
+  // With a selection, dim the non-selected tracks; otherwise default opacity.
+  const opacity = isSelected ? 1 : isHovered ? 0.95 : hasSelection ? 0.2 : 0.5;
+
   return (
     <Polyline
       ref={polylineRef}
       positions={positions}
       pathOptions={{
-        color: TRACK_COLOR,
-        weight: isActive ? 5 : 3,
-        opacity: isActive ? 1 : 0.55,
+        color,
+        weight,
+        opacity,
         lineCap: 'round',
         lineJoin: 'round',
       }}
       eventHandlers={eventHandlers}
       interactive={true}
-    />
+    >
+      {!isSelected && (
+        <Tooltip sticky direction="top" opacity={1} className="!font-sans">
+          <div className="space-y-0.5">
+            <div className="font-semibold text-[13px] leading-tight">{route.name}</div>
+            <div className="flex items-center gap-2 text-[11px] tabular-nums opacity-80">
+              <span>{formatDistance(route.metrics.distanceKm)}</span>
+              <span className="opacity-50">·</span>
+              <span>↑ {formatElevation(route.metrics.elevationGainM)}</span>
+            </div>
+          </div>
+        </Tooltip>
+      )}
+    </Polyline>
   );
 }
 

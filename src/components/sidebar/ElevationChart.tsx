@@ -75,19 +75,19 @@ export function ElevationChart({ data, color, trackCoords }: Props) {
               <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+          <CartesianGrid strokeDasharray="2 4" stroke="rgba(255,255,255,0.04)" vertical={false} />
           <XAxis
             type="number"
             dataKey="distanceKm"
             domain={[0, totalKm]}
             ticks={ticks}
-            tick={{ fill: '#9ca3af', fontSize: 10 }}
+            tick={{ fill: '#6b7280', fontSize: 10 }}
             tickLine={false}
-            axisLine={{ stroke: '#444' }}
+            axisLine={false}
             tickFormatter={(v: number) => `${v}km`}
           />
           <YAxis
-            tick={{ fill: '#9ca3af', fontSize: 10 }}
+            tick={{ fill: '#6b7280', fontSize: 10 }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `${v}m`}
@@ -95,15 +95,16 @@ export function ElevationChart({ data, color, trackCoords }: Props) {
           <Tooltip
             contentStyle={{
               background: '#1c1c1e',
-              border: '1px solid #444',
-              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 6,
               fontSize: 11,
               color: '#fff',
+              padding: '6px 10px',
             }}
             itemStyle={{ color: '#fff' }}
             formatter={(v) => [`${v}m`, 'Elevation']}
             labelFormatter={(v) => `${(+v).toFixed(2)}km`}
-            cursor={{ stroke: color, strokeWidth: 1.5, strokeDasharray: '3 3' }}
+            cursor={{ stroke: 'rgba(255,255,255,0.3)', strokeWidth: 1, strokeDasharray: '2 3' }}
           />
           <Area
             type="monotone"

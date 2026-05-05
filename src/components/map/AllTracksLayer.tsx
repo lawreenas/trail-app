@@ -15,6 +15,7 @@ export function AllTracksLayer() {
             key={route.id}
             routeId={route.id}
             coords={coords}
+            route={route}
           />
         );
       })}

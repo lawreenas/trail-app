@@ -1,14 +1,33 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  Heart,
+  Pencil,
+  X,
+  Ruler,
+  TrendingUp,
+  TrendingDown,
+  Mountain,
+  Share2,
+  Navigation,
+  Download,
+  ExternalLink,
+  Check,
+} from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { DifficultyBadge } from '../ui/DifficultyBadge';
-import { StatItem } from '../ui/StatItem';
 import { ElevationChart } from './ElevationChart';
-import { formatDistance, formatElevation, formatTime } from '../../utils/formatters';
+import { formatDistance, formatElevation } from '../../utils/formatters';
+import {
+  ROUTE_TYPE_LABEL,
+  ROUTE_TYPE_ICON,
+  effectiveRouteType,
+  tagColor,
+} from '../../utils/routeMeta';
+import { DifficultyPill } from '../ui/DifficultyPill';
 import { gpxUrl } from '../../services/gpxLoader';
-import type { TrailRoute } from '../../types';
+import type { Difficulty, TrailRoute } from '../../types';
 
-const COLORS: Record<string, string> = {
+const COLOR_BY_DIFFICULTY: Record<Difficulty, string> = {
   easy: '#22c55e',
   moderate: '#f59e0b',
   hard: '#f97316',
@@ -19,105 +38,180 @@ export function RouteDetail() {
   const selectedRouteId = useAppStore((s) => s.selectedRouteId);
   const routes = useAppStore((s) => s.routes);
   const tracks = useAppStore((s) => s.tracks);
+  const tagLibrary = useAppStore((s) => s.tagLibrary);
+  const favorites = useAppStore((s) => s.favorites);
+  const toggleFavorite = useAppStore((s) => s.toggleFavorite);
+  const isAdminAuthenticated = useAppStore((s) => s.isAdminAuthenticated);
   const selectRoute = useAppStore((s) => s.selectRoute);
   const setSidebarMode = useAppStore((s) => s.setSidebarMode);
 
   const route = routes.find((r) => r.id === selectedRouteId);
   if (!route) return null;
   const trackCoords = tracks[route.id];
+  const isFavorite = favorites.has(route.id);
+  const TypeIcon = ROUTE_TYPE_ICON[effectiveRouteType(route.type)];
 
-  const color = COLORS[route.difficulty];
-
-  const handleBack = () => {
+  const handleClose = () => {
     selectRoute(null);
     setSidebarMode('list');
   };
 
   return (
-    <motion.div
-      className="flex flex-col h-full overflow-hidden"
-      initial={{ x: 40, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 40, opacity: 0 }}
-      transition={{ duration: 0.22, ease: 'easeOut' }}
-    >
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-surface-overlay shrink-0">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      <div className="flex items-center justify-between gap-2 px-3 py-2.5 border-b border-white/[0.06] shrink-0 bg-surface/95 backdrop-blur-sm">
         <button
-          onClick={handleBack}
-          className="p-1.5 rounded-lg hover:bg-surface-overlay transition-colors text-gray-400 hover:text-white"
-          aria-label="Back to list"
+          onClick={handleClose}
+          className="flex items-center gap-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/[0.05] transition-colors rounded-md px-2.5 py-1.5"
+          aria-label="Back to route list"
         >
-          ←
+          <ArrowLeft size={15} strokeWidth={2} />
+          <span className="font-medium">Routes</span>
         </button>
-        <span className="text-sm font-semibold text-white truncate flex-1">{route.name}</span>
-        <DifficultyBadge difficulty={route.difficulty} />
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => toggleFavorite(route.id)}
+            title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            className={`flex items-center justify-center w-9 h-9 rounded-md transition-colors ${
+              isFavorite ? 'text-primary' : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
+            }`}
+          >
+            <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2} />
+          </button>
+          {isAdminAuthenticated && (
+            <a
+              href="#/admin"
+              title="Edit in admin"
+              aria-label="Edit in admin"
+              className="flex items-center justify-center w-9 h-9 rounded-md text-gray-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+            >
+              <Pencil size={16} />
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={handleClose}
+            title="Close"
+            aria-label="Close"
+            className="flex items-center justify-center w-9 h-9 rounded-md text-gray-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-        {route.region && (
-          <p className="text-xs text-gray-400 flex items-center gap-1">
-            <span>📍</span> {route.region}
-          </p>
-        )}
-
-        <div className="grid grid-cols-3 gap-2 bg-surface-raised rounded-xl p-3">
-          <StatItem icon="📏" label="Distance" value={formatDistance(route.metrics.distanceKm)} />
-          <StatItem icon="⬆" label="Gain" value={formatElevation(route.metrics.elevationGainM)} />
-          <StatItem icon="⏱" label="Est. time" value={formatTime(route.metrics.estimatedTimeMin)} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-surface-raised rounded-xl p-3 text-center">
-            <div className="text-xs text-gray-400 mb-1">Max elevation</div>
-            <div className="text-sm font-semibold text-white">{formatElevation(route.metrics.elevationMaxM)}</div>
+      <div className="flex-1 overflow-y-auto px-5 py-6 space-y-7">
+        <header className="space-y-3">
+          {route.type && (
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-gray-500 font-medium">
+              <TypeIcon size={11} strokeWidth={2} />
+              {ROUTE_TYPE_LABEL[route.type]}
+            </div>
+          )}
+          <h2 className="font-display text-[28px] leading-[1.1] font-semibold text-white tracking-tight">
+            {route.name}
+          </h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <DifficultyPill difficulty={route.difficulty} size="md" />
+            {route.region && (
+              <span className="text-xs text-gray-500">{route.region}</span>
+            )}
           </div>
-          <div className="bg-surface-raised rounded-xl p-3 text-center">
-            <div className="text-xs text-gray-400 mb-1">Descent</div>
-            <div className="text-sm font-semibold text-white">{formatElevation(route.metrics.elevationLossM)}</div>
-          </div>
-        </div>
+          {route.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {route.tags.map((name) => (
+                <span
+                  key={name}
+                  className="inline-flex items-center gap-1.5 text-[11px] text-gray-300 bg-white/[0.04] border border-white/[0.06] rounded px-2 py-0.5"
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: tagColor(name, tagLibrary) }}
+                  />
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
+        </header>
+
+        <section className="grid grid-cols-2 gap-x-4 gap-y-5 border-y border-white/[0.06] py-5">
+          <Stat
+            icon={Ruler}
+            label="Distance"
+            value={formatDistance(route.metrics.distanceKm)}
+          />
+          <Stat
+            icon={TrendingUp}
+            label="Elevation gain"
+            value={formatElevation(route.metrics.elevationGainM)}
+          />
+          <Stat
+            icon={TrendingDown}
+            label="Descent"
+            value={formatElevation(route.metrics.elevationLossM)}
+          />
+          <Stat
+            icon={Mountain}
+            label={route.terrain ? 'Terrain' : 'Max elevation'}
+            value={route.terrain ?? formatElevation(route.metrics.elevationMaxM)}
+          />
+        </section>
 
         {route.elevationProfile.length > 0 && (
-          <div className="bg-surface-raised rounded-xl p-3">
-            <div className="text-xs text-gray-400 mb-1">Elevation profile</div>
+          <section>
+            <SectionLabel>Elevation profile</SectionLabel>
             <ElevationChart
               data={route.elevationProfile}
-              color={color}
+              color={COLOR_BY_DIFFICULTY[route.difficulty]}
               trackCoords={trackCoords}
             />
-          </div>
-        )}
-
-        {route.description && (
-          <div className="bg-surface-raised rounded-xl p-3">
-            <div className="text-xs text-gray-400 mb-2">Description</div>
-            <p className="text-sm text-gray-200 leading-relaxed">{route.description}</p>
-          </div>
-        )}
-
-        {route.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {route.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-0.5 text-xs bg-surface-overlay text-gray-300 rounded-full border border-surface-overlay"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          </section>
         )}
 
         <ActionButtons route={route} />
 
-        <div className="text-xs text-gray-500 pb-2 truncate">{route.gpxFileName}</div>
+        {route.description && (
+          <section>
+            <SectionLabel>About</SectionLabel>
+            <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+              {route.description}
+            </p>
+          </section>
+        )}
+
+        <div className="text-[11px] font-mono text-gray-600 pt-2 truncate">
+          {route.gpxFileName}
+        </div>
       </div>
-    </motion.div>
+    </div>
+  );
+}
+
+function Stat({ icon: Icon, label, value }: { icon: typeof Ruler; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="w-7 h-7 rounded-md bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-gray-400 shrink-0">
+        <Icon size={13} strokeWidth={2} />
+      </div>
+      <div className="min-w-0">
+        <div className="text-[10px] uppercase tracking-wider text-gray-500 font-medium">{label}</div>
+        <div className="font-display text-lg text-white mt-0.5 tabular-nums truncate">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-[10px] uppercase tracking-wider text-gray-500 font-medium mb-2.5">
+      {children}
+    </div>
   );
 }
 
 function navigateUrl(lat: number, lng: number): string {
-  // Cross-platform — Google Maps directions URL works on iOS, Android and desktop
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
 }
 
@@ -139,7 +233,7 @@ function ActionButtons({ route }: { route: TrailRoute }) {
         await navigator.share({ title: route.name, url });
         return;
       } catch {
-        // user cancelled or platform blocked — fall through to clipboard
+        // user cancelled — fall through to clipboard
       }
     }
     try {
@@ -153,45 +247,81 @@ function ActionButtons({ route }: { route: TrailRoute }) {
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        <a
-          href={navigateUrl(route.startPoint.lat, route.startPoint.lng)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 bg-accent text-white text-sm font-semibold rounded-xl py-2.5 hover:bg-accent-muted transition-colors"
-          aria-label="Open driving directions to start"
-        >
-          <span>📍</span>
-          <span>Navigate</span>
-        </a>
-        <button
+      <a
+        href={navigateUrl(route.startPoint.lat, route.startPoint.lng)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground text-sm font-semibold rounded-md py-2.5 hover:bg-primary-hover transition-colors"
+      >
+        <Navigation size={14} strokeWidth={2.5} />
+        Navigate to start
+      </a>
+      <div className="grid grid-cols-3 gap-2">
+        <ActionGhost
+          icon={copied ? Check : Share2}
+          label={copied ? 'Copied' : 'Share'}
           onClick={handleShare}
-          className={`flex items-center justify-center gap-1.5 text-sm font-semibold rounded-xl py-2.5 transition-colors ${
-            copied
-              ? 'bg-green-500/20 text-green-400'
-              : 'bg-surface-raised hover:bg-surface-overlay text-white border border-surface-overlay'
-          }`}
-          aria-label="Copy share link"
-        >
-          <span>{copied ? '✓' : '🔗'}</span>
-          <span>{copied ? 'Copied' : 'Share'}</span>
-        </button>
+        />
+        {route.source === 'public' ? (
+          <ActionGhost
+            icon={Download}
+            label="GPX"
+            href={gpxUrl(route.gpxFileName)}
+            download={route.gpxFileName}
+          />
+        ) : (
+          <span
+            className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400/80 border border-amber-400/20 rounded-md py-2"
+            title="Export and commit to publish"
+          >
+            Unpublished
+          </span>
+        )}
+        {route.link ? (
+          <ActionGhost
+            icon={ExternalLink}
+            label="Race info"
+            href={route.link}
+            target="_blank"
+            rel="noopener noreferrer"
+          />
+        ) : (
+          <ActionGhost icon={ExternalLink} label="Race info" disabled />
+        )}
       </div>
-
-      {route.source === 'public' ? (
-        <a
-          href={gpxUrl(route.gpxFileName)}
-          download={route.gpxFileName}
-          className="flex items-center justify-center gap-2 w-full bg-surface-raised hover:bg-surface-overlay text-white text-sm font-medium rounded-xl py-2.5 transition-colors border border-surface-overlay"
-        >
-          <span>⬇</span>
-          <span>Download GPX</span>
-        </a>
-      ) : (
-        <div className="text-xs text-yellow-500 text-center bg-yellow-500/10 rounded-lg px-3 py-2">
-          ● Unpublished — export to make this route downloadable
-        </div>
-      )}
     </div>
+  );
+}
+
+interface GhostProps {
+  icon: typeof Share2;
+  label: string;
+  onClick?: () => void;
+  href?: string;
+  download?: string;
+  target?: string;
+  rel?: string;
+  disabled?: boolean;
+}
+
+function ActionGhost({ icon: Icon, label, onClick, href, download, target, rel, disabled }: GhostProps) {
+  const className = `flex items-center justify-center gap-1.5 text-xs font-medium border rounded-md py-2 transition-colors ${
+    disabled
+      ? 'text-gray-700 border-white/[0.04] cursor-not-allowed'
+      : 'text-gray-300 hover:text-white border-white/[0.08] hover:border-white/20 hover:bg-white/[0.03]'
+  }`;
+  if (href && !disabled) {
+    return (
+      <a href={href} download={download} target={target} rel={rel} className={className}>
+        <Icon size={13} strokeWidth={2} />
+        {label}
+      </a>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} className={className}>
+      <Icon size={13} strokeWidth={2} />
+      {label}
+    </button>
   );
 }
