@@ -6,14 +6,19 @@ interface Props {
   size?: 'sm' | 'md';
 }
 
+/**
+ * Subtle indicator: tiny colored dot (the only difficulty-colored element)
+ * + neutral uppercase label. No filled background — keeps the chrome quiet
+ * so the map's accent color stays the loudest thing on screen.
+ */
 export function DifficultyPill({ difficulty, size = 'sm' }: Props) {
   const c = DIFFICULTY_COLOR[difficulty];
-  const sizeClass = size === 'sm' ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-1';
+  const textSize = size === 'sm' ? 'text-[10px]' : 'text-[11px]';
   return (
     <span
-      className={`inline-flex items-center gap-1 font-medium uppercase tracking-wider rounded ${sizeClass} ${c.bg} ${c.fg}`}
+      className={`inline-flex items-center gap-1.5 font-medium uppercase tracking-wider text-gray-400 ${textSize}`}
     >
-      <span className={`w-1 h-1 rounded-full ${c.dot}`} />
+      <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
       {DIFFICULTY_LABEL[difficulty]}
     </span>
   );

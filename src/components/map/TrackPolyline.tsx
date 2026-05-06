@@ -3,11 +3,8 @@ import { Polyline, Tooltip } from 'react-leaflet';
 import type { LatLngExpression } from 'leaflet';
 import { useAppStore } from '../../store/useAppStore';
 import { formatDistance, formatElevation } from '../../utils/formatters';
+import { MAP_COLORS } from '../../utils/mapColors';
 import type { LngLat, TrailRoute } from '../../types';
-
-const COLOR_SELECTED = '#c4ff00'; // primary lime
-const COLOR_HOVERED = '#ffffff';
-const COLOR_DEFAULT = '#a3a3a8';
 
 interface Props {
   routeId: string;
@@ -20,6 +17,7 @@ function TrackPolylineImpl({ routeId, coords, route }: Props) {
   const isSelected = useAppStore((s) => s.selectedRouteId === routeId);
   const selectedRouteId = useAppStore((s) => s.selectedRouteId);
   const showAllTracks = useAppStore((s) => s.showAllTracks);
+  const mapTheme = useAppStore((s) => s.mapTheme);
   const hover = useAppStore((s) => s.hoverRoute);
   const select = useAppStore((s) => s.selectRoute);
 
@@ -47,9 +45,13 @@ function TrackPolylineImpl({ routeId, coords, route }: Props) {
     return null;
   }
 
-  const color = isSelected ? COLOR_SELECTED : isHovered ? COLOR_HOVERED : COLOR_DEFAULT;
+  const palette = MAP_COLORS[mapTheme];
+  const color = isSelected
+    ? palette.trackSelected
+    : isHovered
+    ? palette.trackHovered
+    : palette.trackDefault;
   const weight = isSelected ? 5 : isHovered ? 4 : 2.5;
-  // With a selection, dim the non-selected tracks; otherwise default opacity.
   const opacity = isSelected ? 1 : isHovered ? 0.95 : hasSelection ? 0.2 : 0.5;
 
   return (

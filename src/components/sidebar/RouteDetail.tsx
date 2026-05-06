@@ -23,16 +23,10 @@ import {
   effectiveRouteType,
   tagColor,
 } from '../../utils/routeMeta';
+import { MAP_COLORS } from '../../utils/mapColors';
 import { DifficultyPill } from '../ui/DifficultyPill';
 import { gpxUrl } from '../../services/gpxLoader';
-import type { Difficulty, TrailRoute } from '../../types';
-
-const COLOR_BY_DIFFICULTY: Record<Difficulty, string> = {
-  easy: '#22c55e',
-  moderate: '#f59e0b',
-  hard: '#f97316',
-  expert: '#ef4444',
-};
+import type { TrailRoute } from '../../types';
 
 export function RouteDetail() {
   const selectedRouteId = useAppStore((s) => s.selectedRouteId);
@@ -42,6 +36,7 @@ export function RouteDetail() {
   const favorites = useAppStore((s) => s.favorites);
   const toggleFavorite = useAppStore((s) => s.toggleFavorite);
   const isAdminAuthenticated = useAppStore((s) => s.isAdminAuthenticated);
+  const mapTheme = useAppStore((s) => s.mapTheme);
   const selectRoute = useAppStore((s) => s.selectRoute);
   const setSidebarMode = useAppStore((s) => s.setSidebarMode);
 
@@ -50,6 +45,7 @@ export function RouteDetail() {
   const trackCoords = tracks[route.id];
   const isFavorite = favorites.has(route.id);
   const TypeIcon = ROUTE_TYPE_ICON[effectiveRouteType(route.type)];
+  const accent = MAP_COLORS[mapTheme].trackSelected;
 
   const handleClose = () => {
     selectRoute(null);
@@ -109,13 +105,25 @@ export function RouteDetail() {
               {ROUTE_TYPE_LABEL[route.type]}
             </div>
           )}
-          <h2 className="font-display text-[28px] leading-[1.1] font-semibold text-white tracking-tight">
-            {route.name}
-          </h2>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-start gap-3">
+            <span
+              className="mt-2 w-1 self-stretch rounded-full shrink-0"
+              style={{ background: accent }}
+              aria-hidden="true"
+            />
+            <h2 className="font-display text-[28px] leading-[1.1] font-semibold text-white tracking-tight flex-1">
+              {route.name}
+            </h2>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap text-gray-400">
             <DifficultyPill difficulty={route.difficulty} size="md" />
             {route.region && (
-              <span className="text-xs text-gray-500">{route.region}</span>
+              <>
+                <span className="text-gray-700" aria-hidden="true">·</span>
+                <span className="text-[11px] uppercase tracking-wider font-medium">
+                  {route.region}
+                </span>
+              </>
             )}
           </div>
           {route.tags.length > 0 && (
@@ -164,7 +172,7 @@ export function RouteDetail() {
             <SectionLabel>Elevation profile</SectionLabel>
             <ElevationChart
               data={route.elevationProfile}
-              color={COLOR_BY_DIFFICULTY[route.difficulty]}
+              color={accent}
               trackCoords={trackCoords}
             />
           </section>
