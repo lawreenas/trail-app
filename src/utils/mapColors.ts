@@ -25,7 +25,7 @@ export interface MapColors {
  * unambiguously against the underlying tile palette.
  */
 export const MAP_COLORS: Record<MapTheme, MapColors> = {
-  // Dark Matter (CartoDB) — mid-grey terrain after our brightness/saturation filter.
+  // Dark Gray Canvas (Esri) — mid-grey terrain after our brightness/saturation filter.
   dark: {
     trackDefault: '#a3a3a8',
     trackHovered: '#c4ff00',
@@ -36,7 +36,7 @@ export const MAP_COLORS: Record<MapTheme, MapColors> = {
     pulseRing: '#c4ff00',
     chartHover: '#c4ff00',
   },
-  // Positron (CartoDB) — clean cream/light-grey background.
+  // Light Gray Canvas (Esri) — clean cream/light-grey background.
   light: {
     trackDefault: '#1f2937',
     trackHovered: '#dc2626',

@@ -28,7 +28,9 @@
   background: #1a1a1c;
 }
 [data-map-theme="dark"] .leaflet-tile-pane {
-  filter: brightness(1.4) saturate(0.3) contrast(0.95);
+  /* Esri Dark Gray Canvas is already mid-grey (CARTO Dark Matter was near-black,
+     which is why this used to lift brightness). Darken instead of brightening. */
+  filter: brightness(0.78) saturate(0.25) contrast(1.08);
 }
 
 [data-map-theme="light"] .leaflet-container {
