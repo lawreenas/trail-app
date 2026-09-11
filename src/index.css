@@ -25,12 +25,15 @@
 }
 
 [data-map-theme="dark"] .leaflet-container {
-  background: #1a1a1c;
+  /* Matches the post-filter tile tone so unloaded tiles don't flash lighter. */
+  background: #121214;
 }
 [data-map-theme="dark"] .leaflet-tile-pane {
   /* Esri Dark Gray Canvas is already mid-grey (CARTO Dark Matter was near-black,
-     which is why this used to lift brightness). Darken instead of brightening. */
-  filter: brightness(0.78) saturate(0.25) contrast(1.08);
+     which is why this used to lift brightness). Darken instead of brightening.
+     Order matters: contrast() pivots around mid-grey, so it must run BEFORE
+     brightness() — darkening first would crush the whole map to flat black. */
+  filter: saturate(0.2) contrast(1.6) brightness(0.55);
 }
 
 [data-map-theme="light"] .leaflet-container {

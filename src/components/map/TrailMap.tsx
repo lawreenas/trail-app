@@ -18,7 +18,7 @@ const TILE_BY_THEME: Record<
   dark: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
     labelsUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-    bg: '#1a1a1c',
+    bg: '#121214',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://www.esri.com">Esri</a>',
     maxZoom: 19,
     maxNativeZoom: 16,
