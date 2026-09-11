@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Heart,
@@ -39,6 +40,7 @@ export function RouteDetail() {
   const mapTheme = useAppStore((s) => s.mapTheme);
   const selectRoute = useAppStore((s) => s.selectRoute);
   const setSidebarMode = useAppStore((s) => s.setSidebarMode);
+  const navigate = useNavigate();
 
   const route = routes.find((r) => r.id === selectedRouteId);
   if (!route) return null;
@@ -76,14 +78,15 @@ export function RouteDetail() {
             <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2} />
           </button>
           {isAdminAuthenticated && (
-            <a
-              href="#/admin"
+            <button
+              type="button"
+              onClick={() => navigate('/admin', { state: { editRouteId: route.id } })}
               title="Edit in admin"
               aria-label="Edit in admin"
               className="flex items-center justify-center w-9 h-9 rounded-md text-gray-400 hover:text-white hover:bg-white/[0.05] transition-colors"
             >
               <Pencil size={16} />
-            </a>
+            </button>
           )}
           <button
             type="button"
