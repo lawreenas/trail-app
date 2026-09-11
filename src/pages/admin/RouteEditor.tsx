@@ -4,7 +4,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { formatDistance, formatElevation } from '../../utils/formatters';
 import { ROUTE_TYPES, ROUTE_TYPE_LABEL } from '../../utils/routeMeta';
 import { TagInput } from './TagInput';
-import type { Difficulty, RouteType, TrailRoute } from '../../types';
+import type { RouteType, TrailRoute } from '../../types';
 
 type PartialUpload = Omit<TrailRoute, 'name' | 'description' | 'region' | 'tags' | 'source'>;
 
@@ -14,22 +14,6 @@ interface Props {
   onCancel: () => void;
   existing?: TrailRoute;
 }
-
-const DIFFICULTIES: Difficulty[] = ['easy', 'moderate', 'hard', 'expert'];
-
-const DIFFICULTY_DOT: Record<Difficulty, string> = {
-  easy: 'bg-difficulty-easy',
-  moderate: 'bg-difficulty-moderate',
-  hard: 'bg-difficulty-hard',
-  expert: 'bg-difficulty-expert',
-};
-
-const DIFFICULTY_LABEL: Record<Difficulty, string> = {
-  easy: 'Easy',
-  moderate: 'Moderate',
-  hard: 'Hard',
-  expert: 'Expert',
-};
 
 const tagsEqual = (a: string[], b: string[]) =>
   a.length === b.length && a.every((v, i) => v === b[i]);
@@ -50,7 +34,6 @@ export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
   const [link, setLink] = useState(initialLink);
   const [tags, setTags] = useState<string[]>(initialTags);
   const [routeType, setRouteType] = useState<RouteType>(initialType);
-  const [difficulty, setDifficulty] = useState<Difficulty>(existing?.difficulty ?? partial.difficulty);
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
@@ -61,8 +44,7 @@ export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
     terrain !== initialTerrain ||
     link !== initialLink ||
     !tagsEqual(tags, initialTags) ||
-    routeType !== initialType ||
-    difficulty !== (existing?.difficulty ?? partial.difficulty);
+    routeType !== initialType;
 
   const canSave = !!name.trim() && (isEdit ? dirty : true);
 
@@ -83,7 +65,6 @@ export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
       type: routeType,
       terrain: trimmedTerrain || undefined,
       link: trimmedLink || undefined,
-      difficulty,
       source: 'local',
       uploadedAt: existing?.uploadedAt ?? partial.uploadedAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -126,26 +107,6 @@ export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
                 }`}
               >
                 {ROUTE_TYPE_LABEL[t]}
-              </button>
-            ))}
-          </div>
-        </Field>
-
-        <Field label="Difficulty">
-          <div className="flex gap-1.5 flex-wrap">
-            {DIFFICULTIES.map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => { setDifficulty(d); markDirty(); }}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${
-                  difficulty === d
-                    ? 'bg-white/[0.08] border-white/20 text-white'
-                    : 'bg-transparent border-white/[0.08] text-gray-400 hover:text-white hover:border-white/15'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${DIFFICULTY_DOT[d]}`} />
-                {DIFFICULTY_LABEL[d]}
               </button>
             ))}
           </div>

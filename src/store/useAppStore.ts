@@ -65,7 +65,6 @@ function trackForRoute(route: TrailRoute): LngLat[] | null {
 
 const DEFAULT_FILTERS: FilterState = {
   search: '',
-  difficulties: [],
   routeTypes: [],
   favoritesOnly: false,
   minDistanceKm: null,
@@ -212,9 +211,6 @@ export function useFilteredRoutes() {
           !route.name.toLowerCase().includes(filters.search.toLowerCase()) &&
           !route.tags.some((t) => t.toLowerCase().includes(filters.search.toLowerCase()))
         ) {
-          return false;
-        }
-        if (filters.difficulties.length && !filters.difficulties.includes(route.difficulty)) {
           return false;
         }
         if (filters.routeTypes.length && (!route.type || !filters.routeTypes.includes(route.type))) {

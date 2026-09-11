@@ -46,9 +46,6 @@ export function computeMetrics(
     }
   }
 
-  // Naismith's rule: 1hr per 5km + 1hr per 600m gain
-  const estimatedTimeMin = Math.round((distanceKm / 5 + elevationGainM / 600) * 60);
-
   return {
     metrics: {
       distanceKm: Math.round(distanceKm * 10) / 10,
@@ -56,7 +53,6 @@ export function computeMetrics(
       elevationLossM: Math.round(elevationLossM),
       elevationMaxM: elevationMaxM === -Infinity ? 0 : Math.round(elevationMaxM),
       elevationMinM: elevationMinM === Infinity ? 0 : Math.round(elevationMinM),
-      estimatedTimeMin,
     },
     elevationProfile,
   };

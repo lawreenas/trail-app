@@ -6,7 +6,6 @@
       "id": "nakties_mi_kas_14km___laukinis_trail",
       "name": "14km",
       "description": "",
-      "difficulty": "hard",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -18,8 +17,7 @@
         "elevationGainM": 0,
         "elevationLossM": 0,
         "elevationMaxM": 0,
-        "elevationMinM": 0,
-        "estimatedTimeMin": 176
+        "elevationMinM": 0
       },
       "elevationProfile": [],
       "gpxFileName": "nakties_mi_kas_14km___laukinis_trail.gpx",
@@ -30,7 +28,6 @@
       "id": "kernav__trail_21km",
       "name": "21K - 2025",
       "description": "",
-      "difficulty": "expert",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -42,8 +39,7 @@
         "elevationGainM": 522,
         "elevationLossM": 538,
         "elevationMaxM": 174,
-        "elevationMinM": 72,
-        "estimatedTimeMin": 342
+        "elevationMinM": 72
       },
       "elevationProfile": [
         {
@@ -535,7 +531,6 @@
       "id": "trys_kry_iai___tiesiai",
       "name": "3 Kryziai",
       "description": "",
-      "difficulty": "easy",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -547,8 +542,7 @@
         "elevationGainM": 53,
         "elevationLossM": 53,
         "elevationMaxM": 163,
-        "elevationMinM": 109,
-        "estimatedTimeMin": 20
+        "elevationMinM": 109
       },
       "elevationProfile": [
         {
@@ -756,7 +750,6 @@
       "id": "trys_kry_iai___loop",
       "name": "3 Kryziai V2",
       "description": "",
-      "difficulty": "easy",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -768,8 +761,7 @@
         "elevationGainM": 43,
         "elevationLossM": 48,
         "elevationMaxM": 152,
-        "elevationMinM": 104,
-        "estimatedTimeMin": 17
+        "elevationMinM": 104
       },
       "elevationProfile": [
         {
@@ -969,7 +961,6 @@
       "id": "kernav__trail_42km",
       "name": "42K - 2025",
       "description": "",
-      "difficulty": "expert",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -981,8 +972,7 @@
         "elevationGainM": 726,
         "elevationLossM": 734,
         "elevationMaxM": 183,
-        "elevationMinM": 72,
-        "estimatedTimeMin": 577
+        "elevationMinM": 72
       },
       "elevationProfile": [
         {
@@ -1474,7 +1464,6 @@
       "id": "nakties_mi_kas_5km___laukinis_trail",
       "name": "5 km",
       "description": "",
-      "difficulty": "moderate",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -1486,8 +1475,7 @@
         "elevationGainM": 0,
         "elevationLossM": 0,
         "elevationMaxM": 0,
-        "elevationMinM": 0,
-        "estimatedTimeMin": 65
+        "elevationMinM": 0
       },
       "elevationProfile": [],
       "gpxFileName": "nakties_mi_kas_5km___laukinis_trail.gpx",
@@ -1498,7 +1486,6 @@
       "id": "kernav____vilnius",
       "name": "82K - 2025",
       "description": "",
-      "difficulty": "expert",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -1510,8 +1497,7 @@
         "elevationGainM": 1155,
         "elevationLossM": 1174,
         "elevationMaxM": 183,
-        "elevationMinM": 66,
-        "estimatedTimeMin": 1100
+        "elevationMinM": 66
       },
       "elevationProfile": [
         {
@@ -2003,7 +1989,6 @@
       "id": "auk_tagiris____iemos_ratai",
       "name": "Antakalnis eldership Trail Run",
       "description": "",
-      "difficulty": "moderate",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -2015,8 +2000,7 @@
         "elevationGainM": 112,
         "elevationLossM": 110,
         "elevationMaxM": 189,
-        "elevationMinM": 153,
-        "estimatedTimeMin": 71
+        "elevationMinM": 153
       },
       "elevationProfile": [
         {
@@ -2508,7 +2492,6 @@
       "id": "burbi_k_s___xtrasa",
       "name": "Burbiškės_Xtrasa2022",
       "description": "",
-      "difficulty": "hard",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -2520,8 +2503,7 @@
         "elevationGainM": 509,
         "elevationLossM": 509,
         "elevationMaxM": 213,
-        "elevationMinM": 148,
-        "estimatedTimeMin": 185
+        "elevationMinM": 148
       },
       "elevationProfile": [
         {
@@ -3013,7 +2995,6 @@
       "id": "duk_tos___laukinis_trail",
       "name": "Dukstos (laukinis)",
       "description": "",
-      "difficulty": "expert",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -3025,8 +3006,7 @@
         "elevationGainM": 494,
         "elevationLossM": 493,
         "elevationMaxM": 152,
-        "elevationMinM": 64,
-        "estimatedTimeMin": 441
+        "elevationMinM": 64
       },
       "elevationProfile": [
         {
@@ -3518,7 +3498,6 @@
       "id": "karolini_ki___laitas",
       "name": "Karoliniškių šlaitas",
       "description": "",
-      "difficulty": "easy",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -3530,8 +3509,7 @@
         "elevationGainM": 64,
         "elevationLossM": 69,
         "elevationMaxM": 144,
-        "elevationMinM": 102,
-        "estimatedTimeMin": 28
+        "elevationMinM": 102
       },
       "elevationProfile": [
         {
@@ -3775,7 +3753,6 @@
       "id": "_alieji_e___naktinis___laukinis_trail",
       "name": "Laukinis trail 24 km ZE ilga naktinis",
       "description": "",
-      "difficulty": "expert",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -3787,8 +3764,7 @@
         "elevationGainM": 321,
         "elevationLossM": 321,
         "elevationMaxM": 165,
-        "elevationMinM": 117,
-        "estimatedTimeMin": 325
+        "elevationMinM": 117
       },
       "elevationProfile": [
         {
@@ -4280,7 +4256,6 @@
       "id": "nakties_mi_kas_24km___laukinis_trail",
       "name": "Laukinis trail Nakties miskas 2020 - 24 km sur TraceDeTrail.fr",
       "description": "",
-      "difficulty": "expert",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -4292,8 +4267,7 @@
         "elevationGainM": 1079,
         "elevationLossM": 1099,
         "elevationMaxM": 186,
-        "elevationMinM": 102,
-        "estimatedTimeMin": 397
+        "elevationMinM": 102
       },
       "elevationProfile": [
         {
@@ -4785,7 +4759,6 @@
       "id": "vanagin____trail_karma",
       "name": "Morning Run",
       "description": "",
-      "difficulty": "moderate",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -4797,8 +4770,7 @@
         "elevationGainM": 144,
         "elevationLossM": 146,
         "elevationMaxM": 200,
-        "elevationMinM": 162,
-        "estimatedTimeMin": 107
+        "elevationMinM": 162
       },
       "elevationProfile": [
         {
@@ -5290,7 +5262,6 @@
       "id": "saul_tekio_mtb",
       "name": "MTB / Sauletekis",
       "description": "",
-      "difficulty": "hard",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -5302,8 +5273,7 @@
         "elevationGainM": 215,
         "elevationLossM": 207,
         "elevationMaxM": 192,
-        "elevationMinM": 116,
-        "estimatedTimeMin": 273
+        "elevationMinM": 116
       },
       "elevationProfile": [
         {
@@ -5795,7 +5765,6 @@
       "id": "pu_kori__ratukas",
       "name": "new",
       "description": "",
-      "difficulty": "easy",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -5807,8 +5776,7 @@
         "elevationGainM": 59,
         "elevationLossM": 59,
         "elevationMaxM": 161,
-        "elevationMinM": 121,
-        "estimatedTimeMin": 56
+        "elevationMinM": 121
       },
       "elevationProfile": [
         {
@@ -6300,7 +6268,6 @@
       "id": "salot_____iemos_ratai",
       "name": "Salote",
       "description": "",
-      "difficulty": "easy",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -6312,8 +6279,7 @@
         "elevationGainM": 149,
         "elevationLossM": 149,
         "elevationMaxM": 160,
-        "elevationMinM": 113,
-        "estimatedTimeMin": 61
+        "elevationMinM": 113
       },
       "elevationProfile": [
         {
@@ -6805,7 +6771,6 @@
       "id": "sapiegin___nuo__ilo_g__",
       "name": "sapiega",
       "description": "",
-      "difficulty": "hard",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -6817,8 +6782,7 @@
         "elevationGainM": 761,
         "elevationLossM": 736,
         "elevationMaxM": 220,
-        "elevationMinM": 107,
-        "estimatedTimeMin": 255
+        "elevationMinM": 107
       },
       "elevationProfile": [
         {
@@ -7310,7 +7274,6 @@
       "id": "sapiegin_",
       "name": "Sapiegine RB Ultra",
       "description": "",
-      "difficulty": "hard",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -7322,8 +7285,7 @@
         "elevationGainM": 352,
         "elevationLossM": 353,
         "elevationMaxM": 203,
-        "elevationMinM": 129,
-        "estimatedTimeMin": 198
+        "elevationMinM": 129
       },
       "elevationProfile": [
         {
@@ -7815,7 +7777,6 @@
       "id": "slalomo_kalnas",
       "name": "Slalomo kalnas",
       "description": "",
-      "difficulty": "easy",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -7827,8 +7788,7 @@
         "elevationGainM": 41,
         "elevationLossM": 60,
         "elevationMaxM": 196,
-        "elevationMinM": 153,
-        "estimatedTimeMin": 20
+        "elevationMinM": 153
       },
       "elevationProfile": [
         {
@@ -8108,7 +8068,6 @@
       "id": "kalvarijos____iemos_ratai",
       "name": "Track from 2021-12-05T15:35:15+0200",
       "description": "",
-      "difficulty": "moderate",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -8120,8 +8079,7 @@
         "elevationGainM": 81,
         "elevationLossM": 84,
         "elevationMaxM": 159,
-        "elevationMinM": 110,
-        "estimatedTimeMin": 66
+        "elevationMinM": 110
       },
       "elevationProfile": [
         {
@@ -8613,7 +8571,6 @@
       "id": "_ernai___trail_karma",
       "name": "Trail Karma - Šernai",
       "description": "",
-      "difficulty": "hard",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -8625,8 +8582,7 @@
         "elevationGainM": 305,
         "elevationLossM": 305,
         "elevationMaxM": 180,
-        "elevationMinM": 107,
-        "estimatedTimeMin": 172
+        "elevationMinM": 107
       },
       "elevationProfile": [
         {
@@ -9118,7 +9074,6 @@
       "id": "takas_aplink_vilni__100km",
       "name": "VIKING_TR001",
       "description": "",
-      "difficulty": "expert",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -9130,8 +9085,7 @@
         "elevationGainM": 4192,
         "elevationLossM": 4141,
         "elevationMaxM": 254,
-        "elevationMinM": 85,
-        "estimatedTimeMin": 1737
+        "elevationMinM": 85
       },
       "elevationProfile": [
         {
@@ -9623,7 +9577,6 @@
       "id": "verki__kilpa___vilnius_100km",
       "name": "VIKING_TR001",
       "description": "",
-      "difficulty": "hard",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -9635,8 +9588,7 @@
         "elevationGainM": 600,
         "elevationLossM": 599,
         "elevationMaxM": 186,
-        "elevationMinM": 105,
-        "estimatedTimeMin": 290
+        "elevationMinM": 105
       },
       "elevationProfile": [
         {
@@ -10128,7 +10080,6 @@
       "id": "ozas____iemos_ratai",
       "name": "VIKING_TR001#2",
       "description": "",
-      "difficulty": "moderate",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -10140,8 +10091,7 @@
         "elevationGainM": 160,
         "elevationLossM": 159,
         "elevationMaxM": 182,
-        "elevationMinM": 133,
-        "estimatedTimeMin": 75
+        "elevationMinM": 133
       },
       "elevationProfile": [
         {
@@ -10633,7 +10583,6 @@
       "id": "verkiai____iemos_ratai",
       "name": "VIKING_TR001#2",
       "description": "",
-      "difficulty": "moderate",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -10645,8 +10594,7 @@
         "elevationGainM": 180,
         "elevationLossM": 176,
         "elevationMaxM": 167,
-        "elevationMinM": 140,
-        "estimatedTimeMin": 87
+        "elevationMinM": 140
       },
       "elevationProfile": [
         {
@@ -11138,7 +11086,6 @@
       "id": "vilnius_trail_run_42km",
       "name": "Vilnius Trail Run  - 42+",
       "description": "",
-      "difficulty": "expert",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -11150,8 +11097,7 @@
         "elevationGainM": 784,
         "elevationLossM": 792,
         "elevationMaxM": 218,
-        "elevationMinM": 98,
-        "estimatedTimeMin": 584
+        "elevationMinM": 98
       },
       "elevationProfile": [
         {
@@ -11643,7 +11589,6 @@
       "id": "vilnius_trail_run_15km",
       "name": "Vilnius Trail Run 15+",
       "description": "",
-      "difficulty": "hard",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -11655,8 +11600,7 @@
         "elevationGainM": 257,
         "elevationLossM": 262,
         "elevationMaxM": 208,
-        "elevationMinM": 98,
-        "estimatedTimeMin": 209
+        "elevationMinM": 98
       },
       "elevationProfile": [
         {
@@ -12148,7 +12092,6 @@
       "id": "vilnius_trail_run_21km",
       "name": "Vilnius Trail Run 21+",
       "description": "",
-      "difficulty": "hard",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -12160,8 +12103,7 @@
         "elevationGainM": 380,
         "elevationLossM": 382,
         "elevationMaxM": 212,
-        "elevationMinM": 98,
-        "estimatedTimeMin": 306
+        "elevationMinM": 98
       },
       "elevationProfile": [
         {
@@ -12653,7 +12595,6 @@
       "id": "_emieji_paneriai___xtrasa_",
       "name": "Xtrasa 2024.03.03",
       "description": "",
-      "difficulty": "moderate",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -12665,8 +12606,7 @@
         "elevationGainM": 279,
         "elevationLossM": 291,
         "elevationMaxM": 170,
-        "elevationMinM": 117,
-        "estimatedTimeMin": 160
+        "elevationMinM": 117
       },
       "elevationProfile": [
         {
@@ -13158,7 +13098,6 @@
       "id": "belmontas____iemos_ratai",
       "name": "ZiemosRataiS02.Belmontas",
       "description": "",
-      "difficulty": "moderate",
       "region": "Vilnius",
       "tags": [],
       "startPoint": {
@@ -13170,8 +13109,7 @@
         "elevationGainM": 129,
         "elevationLossM": 106,
         "elevationMaxM": 202,
-        "elevationMinM": 151,
-        "estimatedTimeMin": 72
+        "elevationMinM": 151
       },
       "elevationProfile": [
         {

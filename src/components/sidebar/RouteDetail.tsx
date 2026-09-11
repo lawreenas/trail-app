@@ -24,7 +24,6 @@ import {
   tagColor,
 } from '../../utils/routeMeta';
 import { MAP_COLORS } from '../../utils/mapColors';
-import { DifficultyPill } from '../ui/DifficultyPill';
 import { gpxUrl } from '../../services/gpxLoader';
 import type { TrailRoute } from '../../types';
 
@@ -115,17 +114,13 @@ export function RouteDetail() {
               {route.name}
             </h2>
           </div>
-          <div className="flex items-center gap-3 flex-wrap text-gray-400">
-            <DifficultyPill difficulty={route.difficulty} size="md" />
-            {route.region && (
-              <>
-                <span className="text-gray-700" aria-hidden="true">·</span>
-                <span className="text-[11px] uppercase tracking-wider font-medium">
-                  {route.region}
-                </span>
-              </>
-            )}
-          </div>
+          {route.region && (
+            <div className="flex items-center gap-3 flex-wrap text-gray-400">
+              <span className="text-[11px] uppercase tracking-wider font-medium">
+                {route.region}
+              </span>
+            </div>
+          )}
           {route.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {route.tags.map((name) => (
@@ -188,10 +183,6 @@ export function RouteDetail() {
             </p>
           </section>
         )}
-
-        <div className="text-[11px] font-mono text-gray-600 pt-2 truncate">
-          {route.gpxFileName}
-        </div>
       </div>
     </div>
   );
