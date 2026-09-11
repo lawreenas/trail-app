@@ -29,12 +29,6 @@ export default {
           DEFAULT: '#ff6b35',
           muted: '#cc5229',
         },
-        difficulty: {
-          easy: '#22c55e',
-          moderate: '#f59e0b',
-          hard: '#f97316',
-          expert: '#ef4444',
-        },
       },
       keyframes: {
         'pulse-ring': {

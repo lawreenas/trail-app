@@ -1,46 +1,28 @@
 import { useMemo, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { formatDistance, formatElevation } from '../../utils/formatters';
-import { ROUTE_TYPE_LABEL, tagColor } from '../../utils/routeMeta';
-import type { Difficulty, TrailRoute } from '../../types';
+import { ROUTE_TYPE_LABEL, elevationColor, tagColor } from '../../utils/routeMeta';
+import type { TrailRoute } from '../../types';
 
 interface Props {
   onEdit: (route: TrailRoute) => void;
   onUpload: () => void;
 }
 
-const DIFFICULTY_DOT: Record<Difficulty, string> = {
-  easy: 'bg-difficulty-easy',
-  moderate: 'bg-difficulty-moderate',
-  hard: 'bg-difficulty-hard',
-  expert: 'bg-difficulty-expert',
-};
-
-const DIFFICULTY_LABELS: Record<Difficulty, string> = {
-  easy: 'Easy',
-  moderate: 'Moderate',
-  hard: 'Hard',
-  expert: 'Expert',
-};
-
-const FILTERS: Array<Difficulty | 'all'> = ['all', 'easy', 'moderate', 'hard', 'expert'];
-
 export function RouteList({ onEdit, onUpload }: Props) {
   const routes = useAppStore((s) => s.routes);
   const [search, setSearch] = useState('');
-  const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all');
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return routes.filter((r) => {
-      if (difficulty !== 'all' && r.difficulty !== difficulty) return false;
       if (!q) return true;
       return (
         r.name.toLowerCase().includes(q) ||
         r.tags.some((t) => t.toLowerCase().includes(q))
       );
     });
-  }, [routes, search, difficulty]);
+  }, [routes, search]);
 
   const localCount = routes.filter((r) => r.source === 'local').length;
 
@@ -74,21 +56,6 @@ export function RouteList({ onEdit, onUpload }: Props) {
           placeholder="Search name or tag…"
           className="flex-1 min-w-[200px] bg-white/[0.04] border border-white/[0.08] text-white text-sm rounded-md px-3 py-2 outline-none focus:border-white/30 focus:bg-white/[0.06] transition-colors placeholder:text-gray-600"
         />
-        <div className="flex gap-1 text-xs">
-          {FILTERS.map((d) => (
-            <button
-              key={d}
-              onClick={() => setDifficulty(d)}
-              className={`px-2.5 py-1.5 rounded-md transition-colors capitalize font-medium ${
-                difficulty === d
-                  ? 'text-white bg-white/10'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              {d}
-            </button>
-          ))}
-        </div>
       </div>
 
       {filtered.length === 0 ? (
@@ -128,8 +95,9 @@ function RouteRow({ route, onEdit }: { route: TrailRoute; onEdit: () => void }) 
     >
       <div className="flex items-start gap-4">
         <span
-          className={`shrink-0 mt-2 w-1.5 h-1.5 rounded-full ${DIFFICULTY_DOT[route.difficulty]}`}
-          title={DIFFICULTY_LABELS[route.difficulty]}
+          className="shrink-0 mt-2 w-1.5 h-1.5 rounded-full"
+          style={{ background: elevationColor(route.metrics.elevationGainM) }}
+          title={`↑ ${formatElevation(route.metrics.elevationGainM)} gain`}
         />
 
         <div className="min-w-0 flex-1 space-y-1.5">

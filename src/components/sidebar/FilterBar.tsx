@@ -2,23 +2,7 @@ import { useRef, useState } from 'react';
 import { Search, Heart, SlidersHorizontal, X } from 'lucide-react';
 import { useAppStore, useRouteMetricRange } from '../../store/useAppStore';
 import { ROUTE_TYPES, ROUTE_TYPE_LABEL } from '../../utils/routeMeta';
-import type { Difficulty, SortKey } from '../../types';
-
-const DIFFICULTIES: Difficulty[] = ['easy', 'moderate', 'hard', 'expert'];
-
-const DIFFICULTY_LABEL: Record<Difficulty, string> = {
-  easy: 'Easy',
-  moderate: 'Mod',
-  hard: 'Hard',
-  expert: 'Expert',
-};
-
-const DIFFICULTY_DOT: Record<Difficulty, string> = {
-  easy: 'bg-difficulty-easy',
-  moderate: 'bg-difficulty-moderate',
-  hard: 'bg-difficulty-hard',
-  expert: 'bg-difficulty-expert',
-};
+import type { SortKey } from '../../types';
 
 const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: 'name', label: 'Name (A→Z)' },
@@ -41,12 +25,6 @@ export function FilterBar() {
     searchTimer.current = setTimeout(() => setFilters({ search: value }), 250);
   };
 
-  const toggleDifficulty = (d: Difficulty) => {
-    const current = filters.difficulties;
-    const next = current.includes(d) ? current.filter((x) => x !== d) : [...current, d];
-    setFilters({ difficulties: next });
-  };
-
   const toggleType = (t: typeof ROUTE_TYPES[number]) => {
     const current = filters.routeTypes;
     const next = current.includes(t) ? current.filter((x) => x !== t) : [...current, t];
@@ -56,7 +34,6 @@ export function FilterBar() {
   const hasActive =
     filters.search ||
     filters.favoritesOnly ||
-    filters.difficulties.length > 0 ||
     filters.routeTypes.length > 0 ||
     filters.minDistanceKm !== null ||
     filters.maxDistanceKm !== null ||
@@ -67,7 +44,6 @@ export function FilterBar() {
     setFilters({
       search: '',
       favoritesOnly: false,
-      difficulties: [],
       routeTypes: [],
       minDistanceKm: null,
       maxDistanceKm: null,
@@ -132,26 +108,6 @@ export function FilterBar() {
         >
           <SlidersHorizontal size={14} />
         </button>
-      </div>
-
-      <div className="flex items-center gap-1 -mx-1">
-        {DIFFICULTIES.map((d) => {
-          const active = filters.difficulties.includes(d);
-          return (
-            <button
-              key={d}
-              onClick={() => toggleDifficulty(d)}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                active
-                  ? 'bg-white/[0.08] text-white'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${DIFFICULTY_DOT[d]}`} />
-              {DIFFICULTY_LABEL[d]}
-            </button>
-          );
-        })}
       </div>
 
       {advancedOpen && (

@@ -1,5 +1,3 @@
-export type Difficulty = 'easy' | 'moderate' | 'hard' | 'expert';
-
 export type RouteType = 'loop' | 'point-to-point' | 'race' | 'hill-repeats';
 
 export interface TagDefinition {
@@ -13,7 +11,6 @@ export interface RouteMetrics {
   elevationLossM: number;
   elevationMaxM: number;
   elevationMinM: number;
-  estimatedTimeMin: number;
 }
 
 export interface ElevationPoint {
@@ -25,7 +22,6 @@ export interface TrailRoute {
   id: string;
   name: string;
   description: string;
-  difficulty: Difficulty;
   type?: RouteType;
   /** Optional surface/terrain note shown alongside metrics (e.g. "Forest singletrack"). */
   terrain?: string;
@@ -65,7 +61,6 @@ export interface TracksDataFile {
 
 export interface FilterState {
   search: string;
-  difficulties: Difficulty[];
   routeTypes: RouteType[];
   favoritesOnly: boolean;
   minDistanceKm: number | null;

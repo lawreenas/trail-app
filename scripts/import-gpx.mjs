@@ -99,7 +99,6 @@ function computeMetrics(coords) {
       elevationLossM: Math.round(lossM),
       elevationMaxM: maxEle === -Infinity ? 0 : Math.round(maxEle),
       elevationMinM: minEle === Infinity ? 0 : Math.round(minEle),
-      estimatedTimeMin: Math.round((distanceKm / 5 + gainM / 600) * 60),
     },
     elevationProfile: profile,
   };
@@ -163,16 +162,6 @@ function simplifyTrack(coords, tolerance) {
   return douglasPeucker(flat, tolerance);
 }
 
-// ─── difficulty (mirrors src/utils/difficultyClassifier.ts) ──────────────────
-
-function classify(metrics) {
-  const score = metrics.distanceKm * 2 + metrics.elevationGainM / 100;
-  if (score < 10) return 'easy';
-  if (score < 25) return 'moderate';
-  if (score < 50) return 'hard';
-  return 'expert';
-}
-
 // ─── filename → fallback display name ────────────────────────────────────────
 
 function filenameFallback(filename) {
@@ -204,7 +193,6 @@ for (const file of files) {
   }
 
   const { metrics, elevationProfile } = computeMetrics(coords);
-  const difficulty = classify(metrics);
   const [startLng, startLat] = coords[0];
   const displayName = name || filenameFallback(file);
 
@@ -219,7 +207,6 @@ for (const file of files) {
     id,
     name: displayName,
     description: '',
-    difficulty,
     type: 'loop',
     region: 'Vilnius',
     tags: [],
@@ -241,7 +228,7 @@ for (const file of files) {
 
   routes.push(route);
   console.log(
-    `  ✓ ${displayName.padEnd(45)} ${metrics.distanceKm}km  ↑${metrics.elevationGainM}m  [${difficulty}]  pts ${coords.length}→${simplified.length}`
+    `  ✓ ${displayName.padEnd(45)} ${metrics.distanceKm}km  ↑${metrics.elevationGainM}m  pts ${coords.length}→${simplified.length}`
   );
 }
 

@@ -5,13 +5,18 @@ import {
   ROUTE_TYPE_ICON,
   ROUTE_TYPE_LABEL,
   effectiveRouteType,
+  elevationColor,
   tagColor,
 } from '../../utils/routeMeta';
-import { DifficultyPill } from '../ui/DifficultyPill';
 import type { TrailRoute } from '../../types';
 
 interface Props {
   route: TrailRoute;
+}
+
+/** Thin separator between stats on the meta line. */
+function Dot() {
+  return <span className="text-gray-600" aria-hidden>·</span>;
 }
 
 export function RouteCard({ route }: Props) {
@@ -37,7 +42,7 @@ export function RouteCard({ route }: Props) {
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter') selectRoute(route.id); }}
-      className={`group relative w-full text-left px-5 py-4 border-b border-white/[0.04] transition-colors cursor-pointer ${
+      className={`group relative w-full text-left px-5 py-3 border-b border-white/[0.04] transition-colors cursor-pointer ${
         isSelected
           ? 'bg-primary/[0.06]'
           : isHovered
@@ -49,24 +54,27 @@ export function RouteCard({ route }: Props) {
         <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary" />
       )}
 
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-[15px] font-medium text-white truncate leading-tight">
-              {route.name}
-            </h3>
-            {route.type && (
-              <TypeIcon
-                size={11}
-                strokeWidth={2}
-                className="text-gray-500 shrink-0"
-                aria-label={ROUTE_TYPE_LABEL[route.type]}
-              />
-            )}
-          </div>
-          <div className="mt-1">
-            <DifficultyPill difficulty={route.difficulty} />
-          </div>
+      {/* Line 1 — the hero: elevation-hued accent dot + route name (+ type icon),
+          with favorite pinned right */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex items-center gap-2">
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ background: elevationColor(route.metrics.elevationGainM) }}
+            title={`↑ ${formatElevation(route.metrics.elevationGainM)} gain`}
+            aria-hidden="true"
+          />
+          <h3 className="text-[15px] font-semibold text-white truncate leading-snug">
+            {route.name}
+          </h3>
+          {route.type && (
+            <TypeIcon
+              size={11}
+              strokeWidth={2}
+              className="text-gray-500 shrink-0"
+              aria-label={ROUTE_TYPE_LABEL[route.type]}
+            />
+          )}
         </div>
         <button
           type="button"
@@ -80,26 +88,39 @@ export function RouteCard({ route }: Props) {
         </button>
       </div>
 
-      <div className="flex items-baseline gap-5 text-base font-medium text-white tabular-nums font-display">
-        <span>{formatDistance(route.metrics.distanceKm)}</span>
-        <span>
-          <span className="text-gray-500 font-normal mr-1.5 text-sm">↑</span>
+      {/* Line 2 — secondary meta: the key stats, one line, muted but readable. */}
+      <div className="mt-1 flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-snug">
+        <span className="font-medium text-gray-200 tabular-nums">
+          {formatDistance(route.metrics.distanceKm)}
+        </span>
+        <Dot />
+        <span className="font-medium text-gray-200 tabular-nums">
+          <span className="text-gray-500 mr-0.5">↑</span>
           {formatElevation(route.metrics.elevationGainM)}
         </span>
       </div>
 
-      {route.tags.length > 0 && (
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-400">
+      {/* Line 3 — quietest: tags when present, else fall back to the route type
+          so a row is never metadata-bare. */}
+      {route.tags.length > 0 ? (
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-gray-500">
           {route.tags.map((name) => (
-            <span key={name} className="inline-flex items-center gap-1.5">
+            <span key={name} className="inline-flex items-center gap-1">
               <span
-                className="w-1.5 h-1.5 rounded-full"
+                className="w-1 h-1 rounded-full"
                 style={{ background: tagColor(name, tagLibrary) }}
               />
               {name}
             </span>
           ))}
         </div>
+      ) : (
+        route.type && (
+          <div className="mt-1.5 flex items-center gap-1 text-[10px] uppercase tracking-wider text-gray-500">
+            <TypeIcon size={10} strokeWidth={2} className="shrink-0" />
+            {ROUTE_TYPE_LABEL[route.type]}
+          </div>
+        )
       )}
     </div>
   );
