@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { UploadZone } from './UploadZone';
 import { RouteEditor } from './RouteEditor';
@@ -19,9 +20,15 @@ export function AdminPage() {
 }
 
 function AdminShell() {
-  const localCount = useAppStore((s) => s.routes.filter((r) => r.source === 'local').length);
+  const routes = useAppStore((s) => s.routes);
+  const localCount = routes.filter((r) => r.source === 'local').length;
+  const location = useLocation();
+  const editRouteId = (location.state as { editRouteId?: string } | null)?.editRouteId;
+  const initialEditRoute = editRouteId ? routes.find((r) => r.id === editRouteId) : undefined;
   const [view, setView] = useState<View>('routes');
-  const [mode, setMode] = useState<RoutesMode>({ kind: 'list' });
+  const [mode, setMode] = useState<RoutesMode>(
+    initialEditRoute ? { kind: 'edit', route: initialEditRoute } : { kind: 'list' }
+  );
 
   const goToList = () => setMode({ kind: 'list' });
   const switchView = (next: View) => {
