@@ -7,7 +7,7 @@ export function MobileContent() {
   const sidebarMode = useAppStore((s) => s.sidebarMode);
   const totalRoutes = useAppStore((s) => s.routes.length);
 
-  if (sidebarMode === 'detail') return <RouteDetail />;
+  if (sidebarMode === 'detail') return <RouteDetail compact />;
 
   return (
     <div className="flex flex-col h-full min-h-0">

@@ -17,6 +17,8 @@ interface Props {
   color: string;
   /** Track coordinates for the same route — used to map chart hover to a map position. */
   trackCoords?: LngLat[];
+  /** Shorter chart for the compact mobile detail view. */
+  compact?: boolean;
 }
 
 const TICK_CANDIDATES = [0.5, 1, 2, 5, 10, 20, 50, 100];
@@ -30,7 +32,7 @@ function buildTicks(totalKm: number): number[] {
   return ticks;
 }
 
-export function ElevationChart({ data, color, trackCoords }: Props) {
+export function ElevationChart({ data, color, trackCoords, compact = false }: Props) {
   const setChartHoverPoint = useAppStore((s) => s.setChartHoverPoint);
   const totalKm = data.length ? data[data.length - 1].distanceKm : 0;
   const ticks = useMemo(() => buildTicks(totalKm), [totalKm]);
@@ -61,7 +63,7 @@ export function ElevationChart({ data, color, trackCoords }: Props) {
   const handleMouseLeave = () => setChartHoverPoint(null);
 
   return (
-    <div className="h-32 w-full mt-2">
+    <div className={`w-full mt-2 ${compact ? 'h-24' : 'h-32'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}

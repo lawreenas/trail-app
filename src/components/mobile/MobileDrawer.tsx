@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAppStore } from '../../store/useAppStore';
 import { MobileContent } from './MobileRouteDetail';
 
 interface Props {
@@ -10,6 +11,12 @@ const SWIPE_DOWN_DISMISS_OFFSET = 120;
 const SWIPE_DOWN_DISMISS_VELOCITY = 600;
 
 export function MobileDrawer({ onClose }: Props) {
+  // In route-detail mode the drawer is capped at half the screen so the map
+  // stays visible up top; the list view keeps the taller sheet for browsing.
+  const isDetail = useAppStore((s) => s.sidebarMode === 'detail');
+  const height = isDetail ? '50dvh' : '85dvh';
+  const maxHeight = isDetail ? '50vh' : '85vh';
+
   const handleDragEnd = (
     _: unknown,
     info: { velocity: { y: number }; offset: { y: number } },
@@ -34,8 +41,8 @@ export function MobileDrawer({ onClose }: Props) {
 
       <motion.div
         key="drawer"
-        className="fixed inset-x-0 bottom-0 z-[1210] flex flex-col bg-surface rounded-t-[20px] border-t border-white/10 shadow-[0_-12px_40px_rgba(0,0,0,0.6)] overflow-hidden"
-        style={{ height: '90dvh', maxHeight: '90vh' }}
+        className="fixed inset-x-0 bottom-0 z-[1210] flex flex-col bg-surface rounded-t-[20px] border-t border-white/10 shadow-[0_-12px_40px_rgba(0,0,0,0.6)] overflow-hidden transition-[height] duration-300 ease-out"
+        style={{ height, maxHeight }}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
