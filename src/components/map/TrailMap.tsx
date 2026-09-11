@@ -9,18 +9,28 @@ import { AllTracksLayer } from './AllTracksLayer';
 import { ChartHoverMarker } from './ChartHoverMarker';
 import { UserLocationLayer } from './UserLocationLayer';
 
-const TILE_BY_THEME: Record<MapTheme, { url: string; bg: string; attribution: string; maxZoom: number }> = {
+const TILE_BY_THEME: Record<
+  MapTheme,
+  { url: string; labelsUrl?: string; bg: string; attribution: string; maxZoom: number; maxNativeZoom?: number }
+> = {
+  // Esri "Dark Gray Canvas" — closest free, key-less equivalent to CARTO Dark Matter
+  // (which now requires a CARTO API key). Base + reference (labels) layers stacked.
   dark: {
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    bg: '#1a1a1c',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    labelsUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+    bg: '#121214',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://www.esri.com">Esri</a>',
     maxZoom: 19,
+    maxNativeZoom: 16,
   },
+  // Esri "Light Gray Canvas" — key-less equivalent to CARTO Positron.
   light: {
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    labelsUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
     bg: '#f5f5f3',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://www.esri.com">Esri</a>',
     maxZoom: 19,
+    maxNativeZoom: 16,
   },
   terrain: {
     url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
@@ -105,7 +115,11 @@ export function TrailMap() {
           url={tile.url}
           attribution={tile.attribution}
           maxZoom={tile.maxZoom}
+          maxNativeZoom={tile.maxNativeZoom}
         />
+        {tile.labelsUrl && (
+          <TileLayer key={`${theme}-labels`} url={tile.labelsUrl} maxZoom={tile.maxZoom} maxNativeZoom={tile.maxNativeZoom} />
+        )}
         <ZoomControl position="bottomleft" />
         <MapController />
         <AllTracksLayer />
