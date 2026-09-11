@@ -28,7 +28,7 @@ import { DifficultyPill } from '../ui/DifficultyPill';
 import { gpxUrl } from '../../services/gpxLoader';
 import type { TrailRoute } from '../../types';
 
-export function RouteDetail() {
+export function RouteDetail({ compact = false }: { compact?: boolean }) {
   const selectedRouteId = useAppStore((s) => s.selectedRouteId);
   const routes = useAppStore((s) => s.routes);
   const tracks = useAppStore((s) => s.tracks);
@@ -97,21 +97,25 @@ export function RouteDetail() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-6 space-y-7">
-        <header className="space-y-3">
+      <div className={`flex-1 overflow-y-auto ${compact ? 'px-4 py-4 space-y-4' : 'px-5 py-6 space-y-7'}`}>
+        <header className={compact ? 'space-y-2' : 'space-y-3'}>
           {route.type && (
             <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-gray-500 font-medium">
               <TypeIcon size={11} strokeWidth={2} />
               {ROUTE_TYPE_LABEL[route.type]}
             </div>
           )}
-          <div className="flex items-start gap-3">
+          <div className={`flex items-start ${compact ? 'gap-2.5' : 'gap-3'}`}>
             <span
-              className="mt-2 w-1 self-stretch rounded-full shrink-0"
+              className="mt-1.5 w-1 self-stretch rounded-full shrink-0"
               style={{ background: accent }}
               aria-hidden="true"
             />
-            <h2 className="font-display text-[28px] leading-[1.1] font-semibold text-white tracking-tight flex-1">
+            <h2
+              className={`font-display leading-[1.15] font-semibold text-white tracking-tight flex-1 ${
+                compact ? 'text-xl' : 'text-[28px] leading-[1.1]'
+              }`}
+            >
               {route.name}
             </h2>
           </div>
@@ -144,26 +148,34 @@ export function RouteDetail() {
           )}
         </header>
 
-        <section className="grid grid-cols-2 gap-x-4 gap-y-5 border-y border-white/[0.06] py-5">
+        <section
+          className={`grid grid-cols-2 gap-x-4 border-y border-white/[0.06] ${
+            compact ? 'gap-y-3 py-3.5' : 'gap-y-5 py-5'
+          }`}
+        >
           <Stat
             icon={Ruler}
             label="Distance"
             value={formatDistance(route.metrics.distanceKm)}
+            compact={compact}
           />
           <Stat
             icon={TrendingUp}
             label="Elevation gain"
             value={formatElevation(route.metrics.elevationGainM)}
+            compact={compact}
           />
           <Stat
             icon={TrendingDown}
             label="Descent"
             value={formatElevation(route.metrics.elevationLossM)}
+            compact={compact}
           />
           <Stat
             icon={Mountain}
             label={route.terrain ? 'Terrain' : 'Max elevation'}
             value={route.terrain ?? formatElevation(route.metrics.elevationMaxM)}
+            compact={compact}
           />
         </section>
 
@@ -174,6 +186,7 @@ export function RouteDetail() {
               data={route.elevationProfile}
               color={accent}
               trackCoords={trackCoords}
+              compact={compact}
             />
           </section>
         )}
@@ -197,15 +210,31 @@ export function RouteDetail() {
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: typeof Ruler; label: string; value: string }) {
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  compact = false,
+}: {
+  icon: typeof Ruler;
+  label: string;
+  value: string;
+  compact?: boolean;
+}) {
   return (
-    <div className="flex items-start gap-3">
+    <div className={`flex items-start ${compact ? 'gap-2.5' : 'gap-3'}`}>
       <div className="w-7 h-7 rounded-md bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-gray-400 shrink-0">
         <Icon size={13} strokeWidth={2} />
       </div>
       <div className="min-w-0">
         <div className="text-[10px] uppercase tracking-wider text-gray-500 font-medium">{label}</div>
-        <div className="font-display text-lg text-white mt-0.5 tabular-nums truncate">{value}</div>
+        <div
+          className={`font-display text-white mt-0.5 tabular-nums truncate ${
+            compact ? 'text-base' : 'text-lg'
+          }`}
+        >
+          {value}
+        </div>
       </div>
     </div>
   );
