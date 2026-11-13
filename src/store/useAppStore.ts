@@ -4,6 +4,7 @@ import { loadAllRoutes } from '../services/dataLoader';
 import {
   upsertLocalRoute,
   deleteLocalRoute,
+  markRouteDeleted,
   upsertLocalTag,
   deleteLocalTag,
 } from '../services/routeStorage';
@@ -65,7 +66,6 @@ function trackForRoute(route: TrailRoute): LngLat[] | null {
 
 const DEFAULT_FILTERS: FilterState = {
   search: '',
-  difficulties: [],
   routeTypes: [],
   favoritesOnly: false,
   minDistanceKm: null,
@@ -76,10 +76,12 @@ const DEFAULT_FILTERS: FilterState = {
   sort: 'name',
 };
 
-export const useAppStore = create<AppStore>((set, _get) => ({
+export const useAppStore = create<AppStore>((set, get) => ({
   routes: [],
   tracks: {},
   tagLibrary: [],
+  pendingDeletions: [],
+  publicRouteIds: [],
   isLoading: true,
   loadError: null,
   selectedRouteId: null,
@@ -120,8 +122,8 @@ export const useAppStore = create<AppStore>((set, _get) => ({
   loadRoutes: async () => {
     set({ isLoading: true, loadError: null });
     try {
-      const { routes, tracks, tagLibrary } = await loadAllRoutes();
-      set({ routes, tracks, tagLibrary, isLoading: false });
+      const { routes, tracks, tagLibrary, pendingDeletions, publicRouteIds } = await loadAllRoutes();
+      set({ routes, tracks, tagLibrary, pendingDeletions, publicRouteIds, isLoading: false });
     } catch (err) {
       set({ loadError: String(err), isLoading: false });
     }
@@ -152,12 +154,21 @@ export const useAppStore = create<AppStore>((set, _get) => ({
   },
 
   deleteRoute: async (id: string) => {
+    const isPublished = get().publicRouteIds.includes(id);
     await deleteLocalRoute(id);
+    // Published routes live in the committed data file, so they need a tombstone
+    // to stay hidden until the next export is committed.
+    if (isPublished) await markRouteDeleted(id);
     set((state) => {
       const { [id]: _removed, ...tracks } = state.tracks;
+      const favorites = new Set(state.favorites);
+      if (favorites.delete(id)) persistFavorites(favorites);
       return {
         routes: state.routes.filter((r) => r.id !== id),
         tracks,
+        favorites,
+        pendingDeletions: isPublished ? [...state.pendingDeletions, id] : state.pendingDeletions,
+        hoveredRouteId: state.hoveredRouteId === id ? null : state.hoveredRouteId,
         selectedRouteId: state.selectedRouteId === id ? null : state.selectedRouteId,
         sidebarMode: state.selectedRouteId === id ? 'list' : state.sidebarMode,
       };
@@ -213,9 +224,6 @@ export function useFilteredRoutes() {
           !route.name.toLowerCase().includes(filters.search.toLowerCase()) &&
           !route.tags.some((t) => t.toLowerCase().includes(filters.search.toLowerCase()))
         ) {
-          return false;
-        }
-        if (filters.difficulties.length && !filters.difficulties.includes(route.difficulty)) {
           return false;
         }
         if (filters.routeTypes.length && (!route.type || !filters.routeTypes.includes(route.type))) {

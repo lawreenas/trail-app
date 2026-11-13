@@ -4,7 +4,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { formatDistance, formatElevation } from '../../utils/formatters';
 import { ROUTE_TYPES, ROUTE_TYPE_LABEL } from '../../utils/routeMeta';
 import { TagInput } from './TagInput';
-import type { Difficulty, RouteType, TrailRoute } from '../../types';
+import type { RouteType, TrailRoute } from '../../types';
 
 type PartialUpload = Omit<TrailRoute, 'name' | 'description' | 'region' | 'tags' | 'source'>;
 
@@ -13,29 +13,16 @@ interface Props {
   onSaved: () => void;
   onCancel: () => void;
   existing?: TrailRoute;
+  /** Called after an existing route is deleted. */
+  onDeleted?: () => void;
 }
-
-const DIFFICULTIES: Difficulty[] = ['easy', 'moderate', 'hard', 'expert'];
-
-const DIFFICULTY_DOT: Record<Difficulty, string> = {
-  easy: 'bg-difficulty-easy',
-  moderate: 'bg-difficulty-moderate',
-  hard: 'bg-difficulty-hard',
-  expert: 'bg-difficulty-expert',
-};
-
-const DIFFICULTY_LABEL: Record<Difficulty, string> = {
-  easy: 'Easy',
-  moderate: 'Moderate',
-  hard: 'Hard',
-  expert: 'Expert',
-};
 
 const tagsEqual = (a: string[], b: string[]) =>
   a.length === b.length && a.every((v, i) => v === b[i]);
 
-export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
+export function RouteEditor({ partial, onSaved, onCancel, existing, onDeleted }: Props) {
   const upsertRoute = useAppStore((s) => s.upsertRoute);
+  const deleteRoute = useAppStore((s) => s.deleteRoute);
   const isEdit = !!existing;
   const initialName = existing?.name ?? partial.gpxFileName.replace('.gpx', '');
   const initialTags = existing?.tags ?? [];
@@ -50,8 +37,9 @@ export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
   const [link, setLink] = useState(initialLink);
   const [tags, setTags] = useState<string[]>(initialTags);
   const [routeType, setRouteType] = useState<RouteType>(initialType);
-  const [difficulty, setDifficulty] = useState<Difficulty>(existing?.difficulty ?? partial.difficulty);
   const [saving, setSaving] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
   const dirty =
@@ -61,8 +49,7 @@ export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
     terrain !== initialTerrain ||
     link !== initialLink ||
     !tagsEqual(tags, initialTags) ||
-    routeType !== initialType ||
-    difficulty !== (existing?.difficulty ?? partial.difficulty);
+    routeType !== initialType;
 
   const canSave = !!name.trim() && (isEdit ? dirty : true);
 
@@ -83,7 +70,6 @@ export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
       type: routeType,
       terrain: trimmedTerrain || undefined,
       link: trimmedLink || undefined,
-      difficulty,
       source: 'local',
       uploadedAt: existing?.uploadedAt ?? partial.uploadedAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -92,6 +78,17 @@ export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
     setSaving(false);
     setJustSaved(true);
     if (!isEdit) onSaved();
+  };
+
+  const handleDelete = async () => {
+    if (!existing) return;
+    setDeleting(true);
+    try {
+      await deleteRoute(existing.id);
+      onDeleted?.();
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -126,26 +123,6 @@ export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
                 }`}
               >
                 {ROUTE_TYPE_LABEL[t]}
-              </button>
-            ))}
-          </div>
-        </Field>
-
-        <Field label="Difficulty">
-          <div className="flex gap-1.5 flex-wrap">
-            {DIFFICULTIES.map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => { setDifficulty(d); markDirty(); }}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${
-                  difficulty === d
-                    ? 'bg-white/[0.08] border-white/20 text-white'
-                    : 'bg-transparent border-white/[0.08] text-gray-400 hover:text-white hover:border-white/15'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${DIFFICULTY_DOT[d]}`} />
-                {DIFFICULTY_LABEL[d]}
               </button>
             ))}
           </div>
@@ -230,6 +207,46 @@ export function RouteEditor({ partial, onSaved, onCancel, existing }: Props) {
           </button>
         </div>
       </div>
+
+      {existing && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/[0.04] p-4 flex items-center justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
+            <div className="text-sm font-medium text-white">
+              {confirmingDelete ? `Delete “${existing.name}”?` : 'Delete route'}
+            </div>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {confirmingDelete
+                ? 'It disappears from the map right away. Export and commit to remove it for everyone.'
+                : 'Remove this route and its track from the app.'}
+            </p>
+          </div>
+          {confirmingDelete ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleting}
+                className="text-sm text-gray-400 hover:text-white transition-colors px-3 py-2"
+              >
+                Keep it
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="bg-red-500 text-white text-sm font-medium rounded-md px-4 py-2 hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Deleting…' : 'Delete route'}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              className="text-sm font-medium text-red-400 border border-red-500/30 rounded-md px-4 py-2 hover:bg-red-500/10 transition-colors"
+            >
+              Delete…
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

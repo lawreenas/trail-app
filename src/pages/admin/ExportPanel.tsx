@@ -7,6 +7,8 @@ export function ExportPanel() {
   const routes = useAppStore((s) => s.routes);
   const tracks = useAppStore((s) => s.tracks);
   const tagLibrary = useAppStore((s) => s.tagLibrary);
+  const pendingDeletions = useAppStore((s) => s.pendingDeletions);
+  const deletedCount = pendingDeletions.length;
   const [exporting, setExporting] = useState(false);
   const [justExported, setJustExported] = useState(false);
 
@@ -14,7 +16,7 @@ export function ExportPanel() {
   const localCount = localRoutes.length;
   const publicCount = routes.filter((r) => r.source === 'public').length;
   const gpxBundleCount = localRoutes.filter((r) => !!r.gpxText).length;
-  const inSync = localCount === 0;
+  const inSync = localCount === 0 && deletedCount === 0;
 
   const handleExport = async () => {
     setExporting(true);
@@ -71,10 +73,11 @@ export function ExportPanel() {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 border-y border-white/[0.06] py-5 tabular-nums">
+      <div className="grid grid-cols-4 border-y border-white/[0.06] py-5 tabular-nums">
         <Metric label="Total" value={routes.length} />
         <Metric label="Published" value={publicCount} />
         <Metric label="Unpublished" value={localCount} amber={localCount > 0} />
+        <Metric label="Deleted" value={deletedCount} amber={deletedCount > 0} />
       </div>
 
       <div className="space-y-3">
@@ -97,6 +100,16 @@ export function ExportPanel() {
             dim={gpxBundleCount === 0}
           />
         </ul>
+        {deletedCount > 0 && (
+          <p className="text-xs text-gray-500 leading-relaxed">
+            The ZIP leaves out {deletedCount} deleted route{deletedCount === 1 ? '' : 's'}. Their GPX
+            files can't be removed by a download, so delete them from{' '}
+            <code className="text-gray-400">public/gpx/</code> when you commit:{' '}
+            <span className="font-mono text-gray-400">
+              {pendingDeletions.map((id) => `${id}.gpx`).join(', ')}
+            </span>
+          </p>
+        )}
       </div>
 
       <div className="flex items-center justify-between gap-4">
@@ -105,7 +118,13 @@ export function ExportPanel() {
             <span className="text-gray-500">In sync with the published file.</span>
           ) : (
             <span className="text-amber-400">
-              {localCount} route{localCount === 1 ? '' : 's'} not yet committed.
+              {[
+                localCount > 0 && `${localCount} route${localCount === 1 ? '' : 's'} changed`,
+                deletedCount > 0 && `${deletedCount} deleted`,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+              {' '}— not yet committed.
             </span>
           )}
         </div>

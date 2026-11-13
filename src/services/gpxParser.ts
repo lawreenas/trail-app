@@ -1,7 +1,6 @@
 import { gpx } from '@tmcw/togeojson';
 import { v4 as uuid } from 'uuid';
 import { computeMetrics } from '../utils/gpxMetrics';
-import { classifyDifficulty } from '../utils/difficultyClassifier';
 import type { TrailRoute } from '../types';
 
 export async function parseGpxFile(file: File): Promise<Omit<TrailRoute, 'name' | 'description' | 'region' | 'tags' | 'source'>> {
@@ -36,12 +35,10 @@ export async function parseGpxFile(file: File): Promise<Omit<TrailRoute, 'name' 
     properties: feature.properties ?? {},
   };
 
-  const difficulty = classifyDifficulty(metrics);
   const now = new Date().toISOString();
 
   return {
     id: uuid(),
-    difficulty,
     type: 'loop',
     startPoint: { lat: startLat, lng: startLng },
     metrics,

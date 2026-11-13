@@ -4,7 +4,9 @@ import type { TagDefinition, TrailRoute } from '../types';
 const DB_NAME = 'trail-app';
 const ROUTES_STORE = 'routes';
 const TAGS_STORE = 'tags';
-const VERSION = 2;
+/** Tombstones for published routes deleted in admin — hidden until the next export is committed. */
+const DELETED_STORE = 'deleted-routes';
+const VERSION = 3;
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 
@@ -17,6 +19,9 @@ function getDb() {
         }
         if (oldVersion < 2) {
           db.createObjectStore(TAGS_STORE, { keyPath: 'name' });
+        }
+        if (oldVersion < 3) {
+          db.createObjectStore(DELETED_STORE);
         }
       },
     });
@@ -53,4 +58,14 @@ export async function upsertLocalTag(tag: TagDefinition): Promise<void> {
 export async function deleteLocalTag(name: string): Promise<void> {
   const db = await getDb();
   await db.delete(TAGS_STORE, name);
+}
+
+export async function getDeletedRouteIds(): Promise<string[]> {
+  const db = await getDb();
+  return (await db.getAllKeys(DELETED_STORE)) as string[];
+}
+
+export async function markRouteDeleted(id: string): Promise<void> {
+  const db = await getDb();
+  await db.put(DELETED_STORE, new Date().toISOString(), id);
 }

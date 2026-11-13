@@ -1,10 +1,9 @@
 import { memo } from 'react';
 import { Heart } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { formatDistance, formatElevation, formatDurationShort } from '../../utils/formatters';
-import { ROUTE_TYPE_LABEL, tagColor } from '../../utils/routeMeta';
+import { formatDistance, formatElevation } from '../../utils/formatters';
+import { ROUTE_TYPE_ICON, ROUTE_TYPE_LABEL, tagColor } from '../../utils/routeMeta';
 import { MAP_COLORS } from '../../utils/mapColors';
-import { DifficultyPill } from '../ui/DifficultyPill';
 import { Sparkline } from '../ui/Sparkline';
 import type { TrailRoute } from '../../types';
 
@@ -23,7 +22,8 @@ function RouteCardImpl({ route }: Props) {
   const accent = useAppStore((s) => MAP_COLORS[s.mapTheme].trackSelected);
 
   const highlighted = isSelected || isHovered;
-  const { distanceKm, elevationGainM, estimatedTimeMin } = route.metrics;
+  const TypeIcon = route.type ? ROUTE_TYPE_ICON[route.type] : null;
+  const { distanceKm, elevationGainM } = route.metrics;
 
   return (
     <li>
@@ -66,21 +66,19 @@ function RouteCardImpl({ route }: Props) {
             </div>
 
             <div className="mt-1.5 flex items-center gap-2 text-[13px] text-gray-400 tabular-nums whitespace-nowrap">
-              <DifficultyPill difficulty={route.difficulty} />
+              {route.type && TypeIcon && (
+                <span className="inline-flex items-center gap-1 rounded bg-white/[0.06] px-1.5 py-px text-[11px] font-medium text-gray-300">
+                  <TypeIcon size={11} />
+                  {ROUTE_TYPE_LABEL[route.type]}
+                </span>
+              )}
               <span className="text-gray-200 font-medium">{formatDistance(distanceKm)}</span>
               <Dot />
               <span>↑ {formatElevation(elevationGainM)}</span>
-              {estimatedTimeMin > 0 && (
-                <>
-                  <Dot />
-                  <span>{formatDurationShort(estimatedTimeMin)}</span>
-                </>
-              )}
             </div>
 
-            {(route.tags.length > 0 || route.type) && (
+            {route.tags.length > 0 && (
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
-                {route.type && <span>{ROUTE_TYPE_LABEL[route.type]}</span>}
                 {route.tags.map((name) => (
                   <span key={name} className="inline-flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: tagColor(name, tagLibrary) }} />

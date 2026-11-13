@@ -21,7 +21,9 @@ export function AdminPage() {
 
 function AdminShell() {
   const routes = useAppStore((s) => s.routes);
+  const deletedCount = useAppStore((s) => s.pendingDeletions.length);
   const localCount = routes.filter((r) => r.source === 'local').length;
+  const pendingCount = localCount + deletedCount;
   const location = useLocation();
   const editRouteId = (location.state as { editRouteId?: string } | null)?.editRouteId;
   const initialEditRoute = editRouteId ? routes.find((r) => r.id === editRouteId) : undefined;
@@ -55,7 +57,7 @@ function AdminShell() {
             active={view === 'export'}
             onClick={() => switchView('export')}
             label="Export"
-            badge={localCount > 0 ? localCount : undefined}
+            badge={pendingCount > 0 ? pendingCount : undefined}
           />
         </nav>
       </header>
@@ -99,6 +101,7 @@ function AdminShell() {
                   existing={mode.route}
                   onSaved={goToList}
                   onCancel={goToList}
+                  onDeleted={goToList}
                 />
               </Pane>
             )}

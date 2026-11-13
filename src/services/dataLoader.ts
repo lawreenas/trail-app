@@ -1,4 +1,4 @@
-import { getAllLocalRoutes, getAllLocalTags } from './routeStorage';
+import { getAllLocalRoutes, getAllLocalTags, getDeletedRouteIds } from './routeStorage';
 import { simplifyTrack } from '../utils/simplify';
 import type { LngLat, RoutesDataFile, TagDefinition, TracksDataFile, TrailRoute } from '../types';
 
@@ -8,16 +8,20 @@ export interface LoadedData {
   routes: TrailRoute[];
   tracks: Record<string, LngLat[]>;
   tagLibrary: TagDefinition[];
+  /** Published routes deleted in admin but still present in the committed data file. */
+  pendingDeletions: string[];
+  publicRouteIds: string[];
 }
 
 export async function loadAllRoutes(): Promise<LoadedData> {
   const base = import.meta.env.BASE_URL ?? '/';
 
-  const [dataRes, tracksRes, localRoutes, localTags] = await Promise.all([
+  const [dataRes, tracksRes, localRoutes, localTags, deletedIds] = await Promise.all([
     fetch(`${base}routes-data.json`).catch(() => null),
     fetch(`${base}routes-tracks.json`).catch(() => null),
     getAllLocalRoutes(),
     getAllLocalTags(),
+    getDeletedRouteIds(),
   ]);
 
   let publicRoutes: TrailRoute[] = [];
@@ -49,6 +53,16 @@ export async function loadAllRoutes(): Promise<LoadedData> {
   for (const r of publicRoutes) mergedRoutes.set(r.id, r);
   for (const r of localRoutes) mergedRoutes.set(r.id, r);
 
+  // Tombstones hide deleted routes. Once the export is committed the id disappears
+  // from the public file and the tombstone becomes inert.
+  const publicRouteIds = publicRoutes.map((r) => r.id);
+  const publicIdSet = new Set(publicRouteIds);
+  const pendingDeletions = deletedIds.filter((id) => publicIdSet.has(id));
+  for (const id of deletedIds) {
+    mergedRoutes.delete(id);
+    delete tracks[id];
+  }
+
   const mergedTags = new Map<string, TagDefinition>();
   for (const t of publicTags) mergedTags.set(t.name, t);
   for (const t of localTags) mergedTags.set(t.name, t);
@@ -56,5 +70,5 @@ export async function loadAllRoutes(): Promise<LoadedData> {
   const routes = Array.from(mergedRoutes.values()).sort((a, b) => a.name.localeCompare(b.name));
   const tagLibrary = Array.from(mergedTags.values()).sort((a, b) => a.name.localeCompare(b.name));
 
-  return { routes, tracks, tagLibrary };
+  return { routes, tracks, tagLibrary, pendingDeletions, publicRouteIds };
 }

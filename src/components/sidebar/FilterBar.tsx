@@ -1,31 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { Search, Heart, SlidersHorizontal, X } from 'lucide-react';
 import { useAppStore, useRouteMetricRange } from '../../store/useAppStore';
-import { ROUTE_TYPES, ROUTE_TYPE_LABEL, DIFFICULTY_LABEL } from '../../utils/routeMeta';
-import type { Difficulty, FilterState } from '../../types';
-
-const DIFFICULTIES: Difficulty[] = ['easy', 'moderate', 'hard', 'expert'];
-
-const DIFFICULTY_DOT: Record<Difficulty, string> = {
-  easy: 'bg-difficulty-easy',
-  moderate: 'bg-difficulty-moderate',
-  hard: 'bg-difficulty-hard',
-  expert: 'bg-difficulty-expert',
-};
+import { ROUTE_TYPES, ROUTE_TYPE_ICON, ROUTE_TYPE_LABEL } from '../../utils/routeMeta';
+import type { FilterState } from '../../types';
 
 /** Distance buckets that map to how runners actually think about runs. */
 const DISTANCE_PRESETS: Array<{ label: string; min: number | null; max: number | null }> = [
-  { label: 'Any', min: null, max: null },
-  { label: 'Under 10', min: null, max: 10 },
-  { label: '10–21', min: 10, max: 21 },
-  { label: '21–42', min: 21, max: 42 },
-  { label: '42+', min: 42, max: null },
+  { label: '< 10 km', min: null, max: 10 },
+  { label: '10–21 km', min: 10, max: 21 },
+  { label: '21–42 km', min: 21, max: 42 },
+  { label: '42 km +', min: 42, max: null },
 ];
 
 export const EMPTY_FILTERS: Partial<FilterState> = {
   search: '',
   favoritesOnly: false,
-  difficulties: [],
   routeTypes: [],
   minDistanceKm: null,
   maxDistanceKm: null,
@@ -33,19 +22,18 @@ export const EMPTY_FILTERS: Partial<FilterState> = {
   maxElevationGainM: null,
 };
 
-/** Number of filters beyond the always-visible chips (shown as a badge on the Filters button). */
+/** Number of filters hidden in the Filters panel (shown as a badge on the Filters button). */
 function advancedCount(f: FilterState): number {
-  let n = f.routeTypes.length;
-  if (f.minDistanceKm !== null || f.maxDistanceKm !== null) n++;
-  if (f.minElevationGainM !== null || f.maxElevationGainM !== null) n++;
-  return n;
+  return f.minElevationGainM !== null || f.maxElevationGainM !== null ? 1 : 0;
 }
 
 export function hasActiveFilters(f: FilterState): boolean {
   return (
     !!f.search ||
     f.favoritesOnly ||
-    f.difficulties.length > 0 ||
+    f.routeTypes.length > 0 ||
+    f.minDistanceKm !== null ||
+    f.maxDistanceKm !== null ||
     advancedCount(f) > 0
   );
 }
@@ -76,10 +64,10 @@ export function FilterBar() {
     setFilters({ search: '' });
   };
 
-  const toggleDifficulty = (d: Difficulty) => {
-    const current = filters.difficulties;
-    const next = current.includes(d) ? current.filter((x) => x !== d) : [...current, d];
-    setFilters({ difficulties: next });
+  // Presets are single-select; clicking the active one clears it.
+  const toggleDistance = (p: typeof DISTANCE_PRESETS[number]) => {
+    const active = filters.minDistanceKm === p.min && filters.maxDistanceKm === p.max;
+    setFilters(active ? { minDistanceKm: null, maxDistanceKm: null } : { minDistanceKm: p.min, maxDistanceKm: p.max });
   };
 
   const toggleType = (t: typeof ROUTE_TYPES[number]) => {
@@ -149,31 +137,31 @@ export function FilterBar() {
           <Heart size={12} fill={filters.favoritesOnly ? 'currentColor' : 'none'} strokeWidth={2.25} />
           Saved
         </Chip>
-        {DIFFICULTIES.map((d) => (
-          <Chip key={d} active={filters.difficulties.includes(d)} onClick={() => toggleDifficulty(d)}>
-            <span className={`w-1.5 h-1.5 rounded-full ${DIFFICULTY_DOT[d]}`} />
-            {DIFFICULTY_LABEL[d]}
+        {DISTANCE_PRESETS.map((p) => (
+          <Chip
+            key={p.label}
+            active={filters.minDistanceKm === p.min && filters.maxDistanceKm === p.max}
+            onClick={() => toggleDistance(p)}
+          >
+            {p.label}
           </Chip>
         ))}
+        {availableTypes.length > 0 && (
+          <span className="w-px h-4 bg-white/[0.08] mx-1 shrink-0" aria-hidden="true" />
+        )}
+        {availableTypes.map((t) => {
+          const Icon = ROUTE_TYPE_ICON[t];
+          return (
+            <Chip key={t} active={filters.routeTypes.includes(t)} onClick={() => toggleType(t)}>
+              <Icon size={12} />
+              {ROUTE_TYPE_LABEL[t]}
+            </Chip>
+          );
+        })}
       </div>
 
       {advancedOpen && (
-        <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-4 space-y-5">
-          <div>
-            <SectionLabel>Distance (km)</SectionLabel>
-            <div className="flex flex-wrap gap-1.5">
-              {DISTANCE_PRESETS.map((p) => (
-                <Chip
-                  key={p.label}
-                  active={filters.minDistanceKm === p.min && filters.maxDistanceKm === p.max}
-                  onClick={() => setFilters({ minDistanceKm: p.min, maxDistanceKm: p.max })}
-                >
-                  {p.label}
-                </Chip>
-              ))}
-            </div>
-          </div>
-
+        <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-4">
           <DualRange
             label="Elevation gain"
             unit="m"
@@ -189,19 +177,6 @@ export function FilterBar() {
               })
             }
           />
-
-          {availableTypes.length > 0 && (
-            <div>
-              <SectionLabel>Route type</SectionLabel>
-              <div className="flex gap-1.5 flex-wrap">
-                {availableTypes.map((t) => (
-                  <Chip key={t} active={filters.routeTypes.includes(t)} onClick={() => toggleType(t)}>
-                    {ROUTE_TYPE_LABEL[t]}
-                  </Chip>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

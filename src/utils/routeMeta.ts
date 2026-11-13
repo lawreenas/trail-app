@@ -1,5 +1,5 @@
 import { RefreshCw, ArrowRight, Flag, Triangle, type LucideIcon } from 'lucide-react';
-import type { Difficulty, RouteType } from '../types';
+import type { RouteType } from '../types';
 
 export const ROUTE_TYPES: RouteType[] = ['loop', 'point-to-point', 'race', 'hill-repeats'];
 
@@ -21,21 +21,6 @@ export const ROUTE_TYPE_ICON: Record<RouteType, LucideIcon> = {
 export function effectiveRouteType(t: RouteType | undefined): RouteType {
   return t ?? 'loop';
 }
-
-/** Color-coded accent for each difficulty. Used in pills and dots. */
-export const DIFFICULTY_COLOR: Record<Difficulty, { bg: string; fg: string; dot: string }> = {
-  easy: { bg: 'bg-difficulty-easy/15', fg: 'text-difficulty-easy', dot: 'bg-difficulty-easy' },
-  moderate: { bg: 'bg-difficulty-moderate/15', fg: 'text-difficulty-moderate', dot: 'bg-difficulty-moderate' },
-  hard: { bg: 'bg-difficulty-hard/15', fg: 'text-difficulty-hard', dot: 'bg-difficulty-hard' },
-  expert: { bg: 'bg-difficulty-expert/15', fg: 'text-difficulty-expert', dot: 'bg-difficulty-expert' },
-};
-
-export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
-  easy: 'Easy',
-  moderate: 'Moderate',
-  hard: 'Hard',
-  expert: 'Expert',
-};
 
 /** Preset palette for tag colors. Curated for legibility on the dark surface. */
 export const TAG_COLORS = [

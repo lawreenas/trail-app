@@ -15,14 +15,12 @@ import { useAppStore } from '../../store/useAppStore';
 import { ElevationChart } from './ElevationChart';
 import {
   distanceParts,
-  durationParts,
   elevationParts,
   formatDistance,
   formatElevation,
 } from '../../utils/formatters';
 import { ROUTE_TYPE_LABEL, ROUTE_TYPE_ICON, effectiveRouteType, tagColor } from '../../utils/routeMeta';
 import { MAP_COLORS } from '../../utils/mapColors';
-import { DifficultyPill } from '../ui/DifficultyPill';
 import { gpxUrl } from '../../services/gpxLoader';
 import type { ElevationPoint, TrailRoute } from '../../types';
 
@@ -47,7 +45,6 @@ export function RouteDetail() {
   const TypeIcon = ROUTE_TYPE_ICON[effectiveRouteType(route.type)];
   const accent = MAP_COLORS[mapTheme].trackSelected;
   const m = route.metrics;
-  const climbRate = m.distanceKm > 0 ? Math.round(m.elevationGainM / m.distanceKm) : 0;
 
   const handleClose = () => {
     selectRoute(null);
@@ -114,24 +111,25 @@ export function RouteDetail() {
           <h2 className="font-display text-[32px] leading-[1.05] font-semibold text-white tracking-tight">
             {route.name}
           </h2>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <DifficultyPill difficulty={route.difficulty} size="md" />
-            {route.tags.map((name) => (
-              <span
-                key={name}
-                className="inline-flex items-center gap-1.5 text-xs text-gray-300 bg-white/[0.05] rounded px-2 py-0.5"
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: tagColor(name, tagLibrary) }} />
-                {name}
-              </span>
-            ))}
-          </div>
+          {route.tags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {route.tags.map((name) => (
+                <span
+                  key={name}
+                  className="inline-flex items-center gap-1.5 text-xs text-gray-300 bg-white/[0.05] rounded px-2 py-0.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: tagColor(name, tagLibrary) }} />
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
         </header>
 
         <section className="mx-5 grid grid-cols-3 rounded-xl bg-white/[0.03] border border-white/[0.06] divide-x divide-white/[0.06]">
           <HeroStat label="Distance" parts={distanceParts(m.distanceKm)} />
           <HeroStat label="Elevation gain" parts={elevationParts(m.elevationGainM)} />
-          <HeroStat label="Est. time" parts={durationParts(m.estimatedTimeMin)} />
+          <HeroStat label="Elevation loss" parts={elevationParts(m.elevationLossM)} />
         </section>
 
         {route.elevationProfile.length > 0 && (
@@ -161,12 +159,10 @@ export function RouteDetail() {
         )}
 
         <section className="px-5 pt-6">
-          <dl className="grid grid-cols-2 gap-x-6 text-sm">
-            <DetailRow label="Descent" value={formatElevation(m.elevationLossM)} />
-            <DetailRow label="Climb rate" value={`${climbRate} m/km`} />
-            <DetailRow label="Highest point" value={formatElevation(m.elevationMaxM)} />
-            <DetailRow label="Lowest point" value={formatElevation(m.elevationMinM)} />
-            {route.terrain && <DetailRow label="Terrain" value={route.terrain} wide />}
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-4 border-y border-white/[0.05] py-4">
+            <DetailStat label="Highest point" value={formatElevation(m.elevationMaxM)} />
+            <DetailStat label="Lowest point" value={formatElevation(m.elevationMinM)} />
+            {route.terrain && <DetailStat label="Terrain" value={route.terrain} wide />}
           </dl>
         </section>
 
@@ -199,11 +195,11 @@ function HeroStat({ label, parts: [value, unit] }: { label: string; parts: [stri
   );
 }
 
-function DetailRow({ label, value, wide }: { label: string; value: string; wide?: boolean }) {
+function DetailStat({ label, value, wide }: { label: string; value: string; wide?: boolean }) {
   return (
-    <div className={`flex items-baseline justify-between gap-3 py-2.5 border-b border-white/[0.05] ${wide ? 'col-span-2' : ''}`}>
-      <dt className="text-gray-400">{label}</dt>
-      <dd className="text-white font-medium tabular-nums text-right truncate">{value}</dd>
+    <div className={`min-w-0 ${wide ? 'col-span-2' : ''}`}>
+      <dt className="text-xs text-gray-500">{label}</dt>
+      <dd className="mt-0.5 text-sm text-white font-medium tabular-nums truncate">{value}</dd>
     </div>
   );
 }
