@@ -1,106 +1,111 @@
+import { memo } from 'react';
 import { Heart } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { formatDistance, formatElevation } from '../../utils/formatters';
-import {
-  ROUTE_TYPE_ICON,
-  ROUTE_TYPE_LABEL,
-  effectiveRouteType,
-  tagColor,
-} from '../../utils/routeMeta';
+import { formatDistance, formatElevation, formatDurationShort } from '../../utils/formatters';
+import { ROUTE_TYPE_LABEL, tagColor } from '../../utils/routeMeta';
+import { MAP_COLORS } from '../../utils/mapColors';
 import { DifficultyPill } from '../ui/DifficultyPill';
+import { Sparkline } from '../ui/Sparkline';
 import type { TrailRoute } from '../../types';
 
 interface Props {
   route: TrailRoute;
 }
 
-export function RouteCard({ route }: Props) {
-  const selectedRouteId = useAppStore((s) => s.selectedRouteId);
-  const hoveredRouteId = useAppStore((s) => s.hoveredRouteId);
+function RouteCardImpl({ route }: Props) {
+  const isSelected = useAppStore((s) => s.selectedRouteId === route.id);
+  const isHovered = useAppStore((s) => s.hoveredRouteId === route.id);
+  const isFavorite = useAppStore((s) => s.favorites.has(route.id));
   const selectRoute = useAppStore((s) => s.selectRoute);
   const hoverRoute = useAppStore((s) => s.hoverRoute);
   const tagLibrary = useAppStore((s) => s.tagLibrary);
-  const favorites = useAppStore((s) => s.favorites);
   const toggleFavorite = useAppStore((s) => s.toggleFavorite);
+  const accent = useAppStore((s) => MAP_COLORS[s.mapTheme].trackSelected);
 
-  const isSelected = selectedRouteId === route.id;
-  const isHovered = hoveredRouteId === route.id;
-  const isFavorite = favorites.has(route.id);
-
-  const TypeIcon = ROUTE_TYPE_ICON[effectiveRouteType(route.type)];
+  const highlighted = isSelected || isHovered;
+  const { distanceKm, elevationGainM, estimatedTimeMin } = route.metrics;
 
   return (
-    <div
-      onClick={() => selectRoute(route.id)}
-      onMouseEnter={() => hoverRoute(route.id)}
-      onMouseLeave={() => hoverRoute(null)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter') selectRoute(route.id); }}
-      className={`group relative w-full text-left px-5 py-4 border-b border-white/[0.04] transition-colors cursor-pointer ${
-        isSelected
-          ? 'bg-primary/[0.06]'
-          : isHovered
-          ? 'bg-white/[0.03]'
-          : 'hover:bg-white/[0.02]'
-      }`}
-    >
-      {isSelected && (
-        <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary" />
-      )}
+    <li>
+      <div
+        onClick={() => selectRoute(route.id)}
+        onMouseEnter={() => hoverRoute(route.id)}
+        onMouseLeave={() => hoverRoute(null)}
+        role="button"
+        tabIndex={0}
+        aria-current={isSelected || undefined}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectRoute(route.id);
+          }
+        }}
+        className={`group relative mx-2 px-3 py-3 rounded-xl cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/50 ${
+          isSelected ? 'bg-white/[0.07]' : isHovered ? 'bg-white/[0.04]' : 'hover:bg-white/[0.04]'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-[14px] font-semibold text-white truncate leading-snug">
+                {route.name}
+              </h3>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); toggleFavorite(route.id); }}
+                className={`shrink-0 -my-1 p-1 rounded-md transition ${
+                  isFavorite
+                    ? 'text-primary'
+                    : 'text-gray-500 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:text-white'
+                }`}
+                aria-label={isFavorite ? 'Remove from saved' : 'Save route'}
+                aria-pressed={isFavorite}
+              >
+                <Heart size={13} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2.25} />
+              </button>
+            </div>
 
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-[15px] font-medium text-white truncate leading-tight">
-              {route.name}
-            </h3>
-            {route.type && (
-              <TypeIcon
-                size={11}
-                strokeWidth={2}
-                className="text-gray-500 shrink-0"
-                aria-label={ROUTE_TYPE_LABEL[route.type]}
-              />
+            <div className="mt-1.5 flex items-center gap-2 text-[13px] text-gray-400 tabular-nums whitespace-nowrap">
+              <DifficultyPill difficulty={route.difficulty} />
+              <span className="text-gray-200 font-medium">{formatDistance(distanceKm)}</span>
+              <Dot />
+              <span>↑ {formatElevation(elevationGainM)}</span>
+              {estimatedTimeMin > 0 && (
+                <>
+                  <Dot />
+                  <span>{formatDurationShort(estimatedTimeMin)}</span>
+                </>
+              )}
+            </div>
+
+            {(route.tags.length > 0 || route.type) && (
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
+                {route.type && <span>{ROUTE_TYPE_LABEL[route.type]}</span>}
+                {route.tags.map((name) => (
+                  <span key={name} className="inline-flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: tagColor(name, tagLibrary) }} />
+                    {name}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
-          <div className="mt-1">
-            <DifficultyPill difficulty={route.difficulty} />
+
+          <div className="shrink-0">
+            <Sparkline
+              data={route.elevationProfile}
+              color={highlighted ? accent : '#71717a'}
+              fillOpacity={highlighted ? 0.2 : 0.12}
+            />
           </div>
         </div>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); toggleFavorite(route.id); }}
-          className={`shrink-0 p-1.5 -m-1.5 rounded transition-colors ${
-            isFavorite ? 'text-primary' : 'text-gray-600 hover:text-white'
-          }`}
-          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-        >
-          <Heart size={15} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2} />
-        </button>
       </div>
-
-      <div className="flex items-baseline gap-5 text-base font-medium text-white tabular-nums font-display">
-        <span>{formatDistance(route.metrics.distanceKm)}</span>
-        <span>
-          <span className="text-gray-500 font-normal mr-1.5 text-sm">↑</span>
-          {formatElevation(route.metrics.elevationGainM)}
-        </span>
-      </div>
-
-      {route.tags.length > 0 && (
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-400">
-          {route.tags.map((name) => (
-            <span key={name} className="inline-flex items-center gap-1.5">
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ background: tagColor(name, tagLibrary) }}
-              />
-              {name}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
+    </li>
   );
 }
+
+function Dot() {
+  return <span className="text-gray-700" aria-hidden="true">·</span>;
+}
+
+export const RouteCard = memo(RouteCardImpl);

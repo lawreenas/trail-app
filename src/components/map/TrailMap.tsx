@@ -79,11 +79,16 @@ function MapController() {
         const latLngs = coords.map(([lng, lat]) => [lat, lng] as L.LatLngExpression);
         const bounds = L.latLngBounds(latLngs);
         const currentBounds = map.getBounds();
+        // On mobile the detail sheet covers the lower ~62% of the screen — frame the track above it.
+        const isMobile = !window.matchMedia('(min-width: 768px)').matches;
+        const padding = isMobile
+          ? { paddingTopLeft: L.point(32, 72), paddingBottomRight: L.point(32, window.innerHeight * 0.62 + 24) }
+          : { padding: L.point(60, 60) };
         if (currentBounds.contains(bounds)) {
-          map.fitBounds(bounds, { padding: [60, 60], animate: true, duration: 0.35 });
+          map.fitBounds(bounds, { ...padding, animate: true, duration: 0.35 });
         } else {
           map.flyToBounds(bounds, {
-            padding: [60, 60],
+            ...padding,
             duration: 0.55,
             easeLinearity: 0.4,
           });

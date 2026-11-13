@@ -4,30 +4,27 @@ import {
   ArrowLeft,
   Heart,
   Pencil,
-  X,
-  Ruler,
-  TrendingUp,
-  TrendingDown,
-  Mountain,
   Share2,
   Navigation,
   Download,
   ExternalLink,
   Check,
+  MapPin,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { ElevationChart } from './ElevationChart';
-import { formatDistance, formatElevation } from '../../utils/formatters';
 import {
-  ROUTE_TYPE_LABEL,
-  ROUTE_TYPE_ICON,
-  effectiveRouteType,
-  tagColor,
-} from '../../utils/routeMeta';
+  distanceParts,
+  durationParts,
+  elevationParts,
+  formatDistance,
+  formatElevation,
+} from '../../utils/formatters';
+import { ROUTE_TYPE_LABEL, ROUTE_TYPE_ICON, effectiveRouteType, tagColor } from '../../utils/routeMeta';
 import { MAP_COLORS } from '../../utils/mapColors';
 import { DifficultyPill } from '../ui/DifficultyPill';
 import { gpxUrl } from '../../services/gpxLoader';
-import type { TrailRoute } from '../../types';
+import type { ElevationPoint, TrailRoute } from '../../types';
 
 export function RouteDetail() {
   const selectedRouteId = useAppStore((s) => s.selectedRouteId);
@@ -41,6 +38,7 @@ export function RouteDetail() {
   const selectRoute = useAppStore((s) => s.selectRoute);
   const setSidebarMode = useAppStore((s) => s.setSidebarMode);
   const navigate = useNavigate();
+  const [activePoint, setActivePoint] = useState<ElevationPoint | null>(null);
 
   const route = routes.find((r) => r.id === selectedRouteId);
   if (!route) return null;
@@ -48,6 +46,8 @@ export function RouteDetail() {
   const isFavorite = favorites.has(route.id);
   const TypeIcon = ROUTE_TYPE_ICON[effectiveRouteType(route.type)];
   const accent = MAP_COLORS[mapTheme].trackSelected;
+  const m = route.metrics;
+  const climbRate = m.distanceKm > 0 ? Math.round(m.elevationGainM / m.distanceKm) : 0;
 
   const handleClose = () => {
     selectRoute(null);
@@ -56,168 +56,154 @@ export function RouteDetail() {
 
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
-      <div className="flex items-center justify-between gap-2 px-3 py-2.5 border-b border-white/[0.06] shrink-0 bg-surface/95 backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-2 px-3 h-14 border-b border-white/[0.06] shrink-0">
         <button
           onClick={handleClose}
-          className="flex items-center gap-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/[0.05] transition-colors rounded-md px-2.5 py-1.5"
-          aria-label="Back to route list"
+          className="flex items-center gap-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/[0.06] transition-colors rounded-lg pl-2 pr-3 h-9"
+          aria-label="Back to all routes"
         >
-          <ArrowLeft size={15} strokeWidth={2} />
-          <span className="font-medium">Routes</span>
+          <ArrowLeft size={16} strokeWidth={2} />
+          <span className="font-medium">All routes</span>
         </button>
-        <div className="flex items-center gap-0.5">
-          <button
-            type="button"
-            onClick={() => toggleFavorite(route.id)}
-            title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-            className={`flex items-center justify-center w-9 h-9 rounded-md transition-colors ${
-              isFavorite ? 'text-primary' : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
-            }`}
-          >
-            <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2} />
-          </button>
+        <div className="flex items-center gap-1">
           {isAdminAuthenticated && (
             <button
               type="button"
               onClick={() => navigate('/admin', { state: { editRouteId: route.id } })}
               title="Edit in admin"
               aria-label="Edit in admin"
-              className="flex items-center justify-center w-9 h-9 rounded-md text-gray-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+              className="flex items-center justify-center w-9 h-9 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
             >
               <Pencil size={16} />
             </button>
           )}
+          <ShareButton route={route} />
           <button
             type="button"
-            onClick={handleClose}
-            title="Close"
-            aria-label="Close"
-            className="flex items-center justify-center w-9 h-9 rounded-md text-gray-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+            onClick={() => toggleFavorite(route.id)}
+            aria-pressed={isFavorite}
+            className={`flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium border transition-colors ${
+              isFavorite
+                ? 'border-primary/40 bg-primary/10 text-primary'
+                : 'border-white/[0.09] text-gray-200 hover:text-white hover:bg-white/[0.06]'
+            }`}
           >
-            <X size={16} />
+            <Heart size={14} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2.25} />
+            {isFavorite ? 'Saved' : 'Save'}
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-6 space-y-7">
-        <header className="space-y-3">
-          {route.type && (
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-gray-500 font-medium">
-              <TypeIcon size={11} strokeWidth={2} />
-              {ROUTE_TYPE_LABEL[route.type]}
-            </div>
-          )}
-          <div className="flex items-start gap-3">
-            <span
-              className="mt-2 w-1 self-stretch rounded-full shrink-0"
-              style={{ background: accent }}
-              aria-hidden="true"
-            />
-            <h2 className="font-display text-[28px] leading-[1.1] font-semibold text-white tracking-tight flex-1">
-              {route.name}
-            </h2>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap text-gray-400">
-            <DifficultyPill difficulty={route.difficulty} size="md" />
+      <div className="flex-1 overflow-y-auto">
+        <header className="px-5 pt-6 pb-5 space-y-3">
+          <div className="flex items-center gap-2 text-xs text-gray-400">
             {route.region && (
-              <>
-                <span className="text-gray-700" aria-hidden="true">·</span>
-                <span className="text-[11px] uppercase tracking-wider font-medium">
-                  {route.region}
-                </span>
-              </>
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={12} />
+                {route.region}
+              </span>
+            )}
+            {route.region && route.type && <span className="text-gray-700">·</span>}
+            {route.type && (
+              <span className="inline-flex items-center gap-1">
+                <TypeIcon size={12} />
+                {ROUTE_TYPE_LABEL[route.type]}
+              </span>
             )}
           </div>
-          {route.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {route.tags.map((name) => (
-                <span
-                  key={name}
-                  className="inline-flex items-center gap-1.5 text-[11px] text-gray-300 bg-white/[0.04] border border-white/[0.06] rounded px-2 py-0.5"
-                >
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: tagColor(name, tagLibrary) }}
-                  />
-                  {name}
-                </span>
-              ))}
-            </div>
-          )}
+          <h2 className="font-display text-[32px] leading-[1.05] font-semibold text-white tracking-tight">
+            {route.name}
+          </h2>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <DifficultyPill difficulty={route.difficulty} size="md" />
+            {route.tags.map((name) => (
+              <span
+                key={name}
+                className="inline-flex items-center gap-1.5 text-xs text-gray-300 bg-white/[0.05] rounded px-2 py-0.5"
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: tagColor(name, tagLibrary) }} />
+                {name}
+              </span>
+            ))}
+          </div>
         </header>
 
-        <section className="grid grid-cols-2 gap-x-4 gap-y-5 border-y border-white/[0.06] py-5">
-          <Stat
-            icon={Ruler}
-            label="Distance"
-            value={formatDistance(route.metrics.distanceKm)}
-          />
-          <Stat
-            icon={TrendingUp}
-            label="Elevation gain"
-            value={formatElevation(route.metrics.elevationGainM)}
-          />
-          <Stat
-            icon={TrendingDown}
-            label="Descent"
-            value={formatElevation(route.metrics.elevationLossM)}
-          />
-          <Stat
-            icon={Mountain}
-            label={route.terrain ? 'Terrain' : 'Max elevation'}
-            value={route.terrain ?? formatElevation(route.metrics.elevationMaxM)}
-          />
+        <section className="mx-5 grid grid-cols-3 rounded-xl bg-white/[0.03] border border-white/[0.06] divide-x divide-white/[0.06]">
+          <HeroStat label="Distance" parts={distanceParts(m.distanceKm)} />
+          <HeroStat label="Elevation gain" parts={elevationParts(m.elevationGainM)} />
+          <HeroStat label="Est. time" parts={durationParts(m.estimatedTimeMin)} />
         </section>
 
         {route.elevationProfile.length > 0 && (
-          <section>
-            <SectionLabel>Elevation profile</SectionLabel>
+          <section className="px-5 pt-7">
+            <div className="flex items-baseline justify-between mb-2">
+              <h3 className="text-sm font-semibold text-white">Elevation</h3>
+              <span className="text-xs tabular-nums text-gray-400">
+                {activePoint ? (
+                  <>
+                    <span className="text-white font-medium">{formatElevation(activePoint.elevationM)}</span>
+                    {' '}at {formatDistance(activePoint.distanceKm)}
+                  </>
+                ) : (
+                  <>
+                    {formatElevation(m.elevationMinM)} – {formatElevation(m.elevationMaxM)}
+                  </>
+                )}
+              </span>
+            </div>
             <ElevationChart
               data={route.elevationProfile}
               color={accent}
               trackCoords={trackCoords}
+              onActiveChange={setActivePoint}
             />
           </section>
         )}
 
-        <ActionButtons route={route} />
+        <section className="px-5 pt-6">
+          <dl className="grid grid-cols-2 gap-x-6 text-sm">
+            <DetailRow label="Descent" value={formatElevation(m.elevationLossM)} />
+            <DetailRow label="Climb rate" value={`${climbRate} m/km`} />
+            <DetailRow label="Highest point" value={formatElevation(m.elevationMaxM)} />
+            <DetailRow label="Lowest point" value={formatElevation(m.elevationMinM)} />
+            {route.terrain && <DetailRow label="Terrain" value={route.terrain} wide />}
+          </dl>
+        </section>
 
         {route.description && (
-          <section>
-            <SectionLabel>About</SectionLabel>
+          <section className="px-5 pt-6">
+            <h3 className="text-sm font-semibold text-white mb-2">About this route</h3>
             <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
               {route.description}
             </p>
           </section>
         )}
 
-        <div className="text-[11px] font-mono text-gray-600 pt-2 truncate">
-          {route.gpxFileName}
-        </div>
+        <div className="h-6" />
+      </div>
+
+      <ActionBar route={route} />
+    </div>
+  );
+}
+
+function HeroStat({ label, parts: [value, unit] }: { label: string; parts: [string, string] }) {
+  return (
+    <div className="px-3 py-3.5 min-w-0">
+      <div className="text-[11px] text-gray-500 truncate">{label}</div>
+      <div className="mt-1 flex items-baseline gap-1 text-white tabular-nums">
+        <span className="font-display text-[26px] leading-none font-semibold">{value}</span>
+        <span className="text-xs text-gray-400 font-medium">{unit}</span>
       </div>
     </div>
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: typeof Ruler; label: string; value: string }) {
+function DetailRow({ label, value, wide }: { label: string; value: string; wide?: boolean }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="w-7 h-7 rounded-md bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-gray-400 shrink-0">
-        <Icon size={13} strokeWidth={2} />
-      </div>
-      <div className="min-w-0">
-        <div className="text-[10px] uppercase tracking-wider text-gray-500 font-medium">{label}</div>
-        <div className="font-display text-lg text-white mt-0.5 tabular-nums truncate">{value}</div>
-      </div>
-    </div>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-[10px] uppercase tracking-wider text-gray-500 font-medium mb-2.5">
-      {children}
+    <div className={`flex items-baseline justify-between gap-3 py-2.5 border-b border-white/[0.05] ${wide ? 'col-span-2' : ''}`}>
+      <dt className="text-gray-400">{label}</dt>
+      <dd className="text-white font-medium tabular-nums text-right truncate">{value}</dd>
     </div>
   );
 }
@@ -234,7 +220,7 @@ function shareableUrl(routeId: string): string {
   return `${origin}${pathname}#${path}?${params.toString()}`;
 }
 
-function ActionButtons({ route }: { route: TrailRoute }) {
+function ShareButton({ route }: { route: TrailRoute }) {
   const [copied, setCopied] = useState(false);
 
   const handleShare = async () => {
@@ -257,82 +243,78 @@ function ActionButtons({ route }: { route: TrailRoute }) {
   };
 
   return (
-    <div className="space-y-2">
+    <button
+      type="button"
+      onClick={handleShare}
+      title={copied ? 'Link copied' : 'Share route'}
+      aria-label={copied ? 'Link copied' : 'Share route'}
+      className={`flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
+        copied ? 'text-primary' : 'text-gray-400 hover:text-white hover:bg-white/[0.06]'
+      }`}
+    >
+      {copied ? <Check size={16} /> : <Share2 size={16} />}
+    </button>
+  );
+}
+
+/** Sticky footer: the main thing you do with a route is go run it. */
+function ActionBar({ route }: { route: TrailRoute }) {
+  return (
+    <div className="shrink-0 border-t border-white/[0.06] bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-2">
       <a
         href={navigateUrl(route.startPoint.lat, route.startPoint.lng)}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground text-sm font-semibold rounded-md py-2.5 hover:bg-primary-hover transition-colors"
+        className="flex-1 flex items-center justify-center gap-2 h-11 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary-hover transition-colors"
       >
-        <Navigation size={14} strokeWidth={2.5} />
-        Navigate to start
+        <Navigation size={15} strokeWidth={2.5} />
+        Directions to start
       </a>
-      <div className="grid grid-cols-3 gap-2">
-        <ActionGhost
-          icon={copied ? Check : Share2}
-          label={copied ? 'Copied' : 'Share'}
-          onClick={handleShare}
+      {route.source === 'public' && (
+        <SecondaryAction
+          icon={Download}
+          label="GPX"
+          title={`Download ${route.gpxFileName}`}
+          href={gpxUrl(route.gpxFileName)}
+          download={route.gpxFileName}
         />
-        {route.source === 'public' ? (
-          <ActionGhost
-            icon={Download}
-            label="GPX"
-            href={gpxUrl(route.gpxFileName)}
-            download={route.gpxFileName}
-          />
-        ) : (
-          <span
-            className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400/80 border border-amber-400/20 rounded-md py-2"
-            title="Export and commit to publish"
-          >
-            Unpublished
-          </span>
-        )}
-        {route.link ? (
-          <ActionGhost
-            icon={ExternalLink}
-            label="Race info"
-            href={route.link}
-            target="_blank"
-            rel="noopener noreferrer"
-          />
-        ) : (
-          <ActionGhost icon={ExternalLink} label="Race info" disabled />
-        )}
-      </div>
+      )}
+      {route.link && (
+        <SecondaryAction
+          icon={ExternalLink}
+          label="Event"
+          title="Open event page"
+          href={route.link}
+          target="_blank"
+          rel="noopener noreferrer"
+        />
+      )}
     </div>
   );
 }
 
-interface GhostProps {
-  icon: typeof Share2;
+function SecondaryAction({
+  icon: Icon,
+  label,
+  title,
+  ...rest
+}: {
+  icon: typeof Download;
   label: string;
-  onClick?: () => void;
-  href?: string;
+  title: string;
+  href: string;
   download?: string;
   target?: string;
   rel?: string;
-  disabled?: boolean;
-}
-
-function ActionGhost({ icon: Icon, label, onClick, href, download, target, rel, disabled }: GhostProps) {
-  const className = `flex items-center justify-center gap-1.5 text-xs font-medium border rounded-md py-2 transition-colors ${
-    disabled
-      ? 'text-gray-700 border-white/[0.04] cursor-not-allowed'
-      : 'text-gray-300 hover:text-white border-white/[0.08] hover:border-white/20 hover:bg-white/[0.03]'
-  }`;
-  if (href && !disabled) {
-    return (
-      <a href={href} download={download} target={target} rel={rel} className={className}>
-        <Icon size={13} strokeWidth={2} />
-        {label}
-      </a>
-    );
-  }
+}) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={className}>
-      <Icon size={13} strokeWidth={2} />
+    <a
+      {...rest}
+      title={title}
+      className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-lg border border-white/[0.1] text-sm font-medium text-gray-200 hover:text-white hover:bg-white/[0.06] transition-colors"
+    >
+      <Icon size={15} />
       {label}
-    </button>
+    </a>
   );
 }

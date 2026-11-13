@@ -7,17 +7,15 @@ interface Props {
 }
 
 /**
- * Subtle indicator: tiny colored dot (the only difficulty-colored element)
- * + neutral uppercase label. No filled background — keeps the chrome quiet
- * so the map's accent color stays the loudest thing on screen.
+ * Tinted badge: colored dot + label on a faint wash of the difficulty color.
+ * Enough presence to scan a list by difficulty, quiet enough that the map's
+ * accent stays the loudest thing on screen.
  */
 export function DifficultyPill({ difficulty, size = 'sm' }: Props) {
   const c = DIFFICULTY_COLOR[difficulty];
-  const textSize = size === 'sm' ? 'text-[10px]' : 'text-[11px]';
+  const sizing = size === 'sm' ? 'text-[11px] px-1.5 py-px gap-1' : 'text-xs px-2 py-0.5 gap-1.5';
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 font-medium uppercase tracking-wider text-gray-400 ${textSize}`}
-    >
+    <span className={`inline-flex items-center rounded font-medium ${c.bg} ${c.fg} ${sizing}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
       {DIFFICULTY_LABEL[difficulty]}
     </span>

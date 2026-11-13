@@ -1,17 +1,10 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Search, Heart, SlidersHorizontal, X } from 'lucide-react';
 import { useAppStore, useRouteMetricRange } from '../../store/useAppStore';
-import { ROUTE_TYPES, ROUTE_TYPE_LABEL } from '../../utils/routeMeta';
-import type { Difficulty, SortKey } from '../../types';
+import { ROUTE_TYPES, ROUTE_TYPE_LABEL, DIFFICULTY_LABEL } from '../../utils/routeMeta';
+import type { Difficulty, FilterState } from '../../types';
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'moderate', 'hard', 'expert'];
-
-const DIFFICULTY_LABEL: Record<Difficulty, string> = {
-  easy: 'Easy',
-  moderate: 'Mod',
-  hard: 'Hard',
-  expert: 'Expert',
-};
 
 const DIFFICULTY_DOT: Record<Difficulty, string> = {
   easy: 'bg-difficulty-easy',
@@ -20,25 +13,67 @@ const DIFFICULTY_DOT: Record<Difficulty, string> = {
   expert: 'bg-difficulty-expert',
 };
 
-const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
-  { value: 'name', label: 'Name (A→Z)' },
-  { value: 'distance-asc', label: 'Distance ↑' },
-  { value: 'distance-desc', label: 'Distance ↓' },
-  { value: 'elevation-asc', label: 'Elevation ↑' },
-  { value: 'elevation-desc', label: 'Elevation ↓' },
-  { value: 'recent', label: 'Recently updated' },
+/** Distance buckets that map to how runners actually think about runs. */
+const DISTANCE_PRESETS: Array<{ label: string; min: number | null; max: number | null }> = [
+  { label: 'Any', min: null, max: null },
+  { label: 'Under 10', min: null, max: 10 },
+  { label: '10–21', min: 10, max: 21 },
+  { label: '21–42', min: 21, max: 42 },
+  { label: '42+', min: 42, max: null },
 ];
+
+export const EMPTY_FILTERS: Partial<FilterState> = {
+  search: '',
+  favoritesOnly: false,
+  difficulties: [],
+  routeTypes: [],
+  minDistanceKm: null,
+  maxDistanceKm: null,
+  minElevationGainM: null,
+  maxElevationGainM: null,
+};
+
+/** Number of filters beyond the always-visible chips (shown as a badge on the Filters button). */
+function advancedCount(f: FilterState): number {
+  let n = f.routeTypes.length;
+  if (f.minDistanceKm !== null || f.maxDistanceKm !== null) n++;
+  if (f.minElevationGainM !== null || f.maxElevationGainM !== null) n++;
+  return n;
+}
+
+export function hasActiveFilters(f: FilterState): boolean {
+  return (
+    !!f.search ||
+    f.favoritesOnly ||
+    f.difficulties.length > 0 ||
+    advancedCount(f) > 0
+  );
+}
 
 export function FilterBar() {
   const filters = useAppStore((s) => s.filters);
   const setFilters = useAppStore((s) => s.setFilters);
+  const routes = useAppStore((s) => s.routes);
   const range = useRouteMetricRange();
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [query, setQuery] = useState(filters.search);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Keep the input in sync when filters are reset from elsewhere (e.g. "Clear all").
+  useEffect(() => {
+    setQuery(filters.search);
+  }, [filters.search]);
+
   const handleSearch = (value: string) => {
+    setQuery(value);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => setFilters({ search: value }), 250);
+    searchTimer.current = setTimeout(() => setFilters({ search: value }), 200);
+  };
+
+  const clearSearch = () => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    setQuery('');
+    setFilters({ search: '' });
   };
 
   const toggleDifficulty = (d: Difficulty) => {
@@ -53,180 +88,157 @@ export function FilterBar() {
     setFilters({ routeTypes: next });
   };
 
-  const hasActive =
-    filters.search ||
-    filters.favoritesOnly ||
-    filters.difficulties.length > 0 ||
-    filters.routeTypes.length > 0 ||
-    filters.minDistanceKm !== null ||
-    filters.maxDistanceKm !== null ||
-    filters.minElevationGainM !== null ||
-    filters.maxElevationGainM !== null;
+  // Only offer the type filter when the data actually has types to choose from.
+  const availableTypes = ROUTE_TYPES.filter((t) => routes.some((r) => r.type === t));
+  const extraCount = advancedCount(filters);
 
-  const clearAll = () =>
-    setFilters({
-      search: '',
-      favoritesOnly: false,
-      difficulties: [],
-      routeTypes: [],
-      minDistanceKm: null,
-      maxDistanceKm: null,
-      minElevationGainM: null,
-      maxElevationGainM: null,
-    });
-
-  const minDistance = filters.minDistanceKm ?? range.minDistance;
-  const maxDistance = filters.maxDistanceKm ?? range.maxDistance;
   const minElevation = filters.minElevationGainM ?? range.minElevation;
   const maxElevation = filters.maxElevationGainM ?? range.maxElevation;
 
   return (
-    <div className="px-5 pb-4 space-y-3 shrink-0 border-b border-white/[0.06]">
-      <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-        <input
-          type="search"
-          placeholder="Search routes or tags…"
-          className="w-full bg-white/[0.04] border border-white/[0.08] text-white text-sm rounded-md pl-9 pr-3 py-2 outline-none focus:border-white/30 focus:bg-white/[0.06] transition-colors placeholder:text-gray-600"
-          defaultValue={filters.search}
-          onChange={(e) => handleSearch(e.target.value)}
-          aria-label="Search routes"
-        />
-      </div>
-
+    <div className="px-4 pb-3 space-y-2.5 shrink-0">
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setFilters({ favoritesOnly: !filters.favoritesOnly })}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors ${
-            filters.favoritesOnly
-              ? 'bg-primary/15 border-primary/40 text-primary'
-              : 'bg-transparent border-white/[0.08] text-gray-400 hover:text-white hover:border-white/15'
-          }`}
-        >
-          <Heart size={12} fill={filters.favoritesOnly ? 'currentColor' : 'none'} strokeWidth={2} />
-          Favorites
-        </button>
-
-        <select
-          value={filters.sort}
-          onChange={(e) => setFilters({ sort: e.target.value as SortKey })}
-          className="flex-1 bg-white/[0.04] border border-white/[0.08] text-xs text-gray-300 rounded-md px-2.5 py-1.5 outline-none focus:border-white/30 transition-colors"
-          aria-label="Sort routes"
-        >
-          {SORT_OPTIONS.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </select>
-
+        <div className="relative flex-1">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          <input
+            type="text"
+            inputMode="search"
+            placeholder="Search by name or tag"
+            className="w-full h-10 bg-white/[0.05] border border-white/[0.07] text-white text-sm rounded-lg pl-9 pr-9 outline-none focus:border-primary/50 focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/15 transition placeholder:text-gray-500"
+            value={query}
+            onChange={(e) => handleSearch(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') clearSearch(); }}
+            aria-label="Search routes"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-md text-gray-500 hover:text-white hover:bg-white/[0.08] transition-colors"
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
         <button
           type="button"
           onClick={() => setAdvancedOpen((v) => !v)}
-          className={`flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
-            advancedOpen || hasActive
-              ? 'text-primary bg-primary/10'
-              : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
+          aria-expanded={advancedOpen}
+          className={`relative h-10 flex items-center gap-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+            advancedOpen || extraCount > 0
+              ? 'border-primary/40 bg-primary/10 text-primary'
+              : 'border-white/[0.07] bg-white/[0.05] text-gray-300 hover:text-white hover:bg-white/[0.08]'
           }`}
-          title="More filters"
-          aria-label="More filters"
         >
-          <SlidersHorizontal size={14} />
+          <SlidersHorizontal size={15} />
+          <span className="hidden sm:inline">Filters</span>
+          {extraCount > 0 && (
+            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold flex items-center justify-center tabular-nums">
+              {extraCount}
+            </span>
+          )}
         </button>
       </div>
 
-      <div className="flex items-center gap-1 -mx-1">
-        {DIFFICULTIES.map((d) => {
-          const active = filters.difficulties.includes(d);
-          return (
-            <button
-              key={d}
-              onClick={() => toggleDifficulty(d)}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                active
-                  ? 'bg-white/[0.08] text-white'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${DIFFICULTY_DOT[d]}`} />
-              {DIFFICULTY_LABEL[d]}
-            </button>
-          );
-        })}
+      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar -mx-4 px-4">
+        <Chip
+          active={filters.favoritesOnly}
+          onClick={() => setFilters({ favoritesOnly: !filters.favoritesOnly })}
+        >
+          <Heart size={12} fill={filters.favoritesOnly ? 'currentColor' : 'none'} strokeWidth={2.25} />
+          Saved
+        </Chip>
+        {DIFFICULTIES.map((d) => (
+          <Chip key={d} active={filters.difficulties.includes(d)} onClick={() => toggleDifficulty(d)}>
+            <span className={`w-1.5 h-1.5 rounded-full ${DIFFICULTY_DOT[d]}`} />
+            {DIFFICULTY_LABEL[d]}
+          </Chip>
+        ))}
       </div>
 
       {advancedOpen && (
-        <div className="space-y-4 pt-3 mt-1 border-t border-white/[0.04]">
+        <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-4 space-y-5">
           <div>
-            <SectionLabel>Type</SectionLabel>
-            <div className="flex gap-1.5 flex-wrap">
-              {ROUTE_TYPES.map((t) => {
-                const active = filters.routeTypes.includes(t);
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => toggleType(t)}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors ${
-                      active
-                        ? 'bg-white/[0.08] border-white/20 text-white'
-                        : 'bg-transparent border-white/[0.08] text-gray-500 hover:text-white hover:border-white/15'
-                    }`}
-                  >
-                    {ROUTE_TYPE_LABEL[t]}
-                  </button>
-                );
-              })}
+            <SectionLabel>Distance (km)</SectionLabel>
+            <div className="flex flex-wrap gap-1.5">
+              {DISTANCE_PRESETS.map((p) => (
+                <Chip
+                  key={p.label}
+                  active={filters.minDistanceKm === p.min && filters.maxDistanceKm === p.max}
+                  onClick={() => setFilters({ minDistanceKm: p.min, maxDistanceKm: p.max })}
+                >
+                  {p.label}
+                </Chip>
+              ))}
             </div>
           </div>
 
-          <RangeSlider
-            label="Distance"
-            unit="km"
-            min={range.minDistance}
-            max={range.maxDistance}
-            step={1}
-            valueMin={minDistance}
-            valueMax={maxDistance}
-            onChangeMin={(v) => setFilters({ minDistanceKm: v <= range.minDistance ? null : v })}
-            onChangeMax={(v) => setFilters({ maxDistanceKm: v >= range.maxDistance ? null : v })}
-          />
-
-          <RangeSlider
+          <DualRange
             label="Elevation gain"
             unit="m"
             min={range.minElevation}
             max={range.maxElevation}
-            step={50}
+            step={10}
             valueMin={minElevation}
             valueMax={maxElevation}
-            onChangeMin={(v) => setFilters({ minElevationGainM: v <= range.minElevation ? null : v })}
-            onChangeMax={(v) => setFilters({ maxElevationGainM: v >= range.maxElevation ? null : v })}
+            onChange={(lo, hi) =>
+              setFilters({
+                minElevationGainM: lo <= range.minElevation ? null : lo,
+                maxElevationGainM: hi >= range.maxElevation ? null : hi,
+              })
+            }
           />
+
+          {availableTypes.length > 0 && (
+            <div>
+              <SectionLabel>Route type</SectionLabel>
+              <div className="flex gap-1.5 flex-wrap">
+                {availableTypes.map((t) => (
+                  <Chip key={t} active={filters.routeTypes.includes(t)} onClick={() => toggleType(t)}>
+                    {ROUTE_TYPE_LABEL[t]}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
-
-      {hasActive && (
-        <button
-          onClick={clearAll}
-          className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-white transition-colors"
-        >
-          <X size={11} />
-          Clear filters
-        </button>
-      )}
     </div>
+  );
+}
+
+function Chip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`shrink-0 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-xs font-medium border transition-colors ${
+        active
+          ? 'bg-white text-black border-white'
+          : 'bg-transparent border-white/[0.09] text-gray-300 hover:text-white hover:border-white/20 hover:bg-white/[0.04]'
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-[10px] uppercase tracking-wider text-gray-500 font-medium mb-1.5">
-      {children}
-    </div>
-  );
+  return <div className="text-xs font-medium text-gray-400 mb-2">{children}</div>;
 }
 
-function RangeSlider({
+/** Single-track, two-thumb range slider built from two overlaid native inputs. */
+function DualRange({
   label,
   unit,
   min,
@@ -234,8 +246,7 @@ function RangeSlider({
   step,
   valueMin,
   valueMax,
-  onChangeMin,
-  onChangeMax,
+  onChange,
 }: {
   label: string;
   unit: string;
@@ -244,30 +255,35 @@ function RangeSlider({
   step: number;
   valueMin: number;
   valueMax: number;
-  onChangeMin: (v: number) => void;
-  onChangeMax: (v: number) => void;
+  onChange: (lo: number, hi: number) => void;
 }) {
+  const span = Math.max(max - min, 1);
+  const loPct = ((valueMin - min) / span) * 100;
+  const hiPct = ((valueMax - min) / span) * 100;
+  const isFull = valueMin <= min && valueMax >= max;
+
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-2">
+      <div className="flex items-baseline justify-between">
         <SectionLabel>{label}</SectionLabel>
-        <span className="text-[11px] text-gray-300 tabular-nums">
-          {valueMin}–{valueMax} {unit}
+        <span className="text-xs text-gray-300 tabular-nums">
+          {isFull ? 'Any' : `${valueMin.toLocaleString()}–${valueMax.toLocaleString()} ${unit}`}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="dual-range relative h-5">
+        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 rounded-full bg-white/[0.08]" />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 h-1 rounded-full bg-primary"
+          style={{ left: `${loPct}%`, right: `${100 - hiPct}%` }}
+        />
         <input
           type="range"
           min={min}
           max={max}
           step={step}
           value={valueMin}
-          onChange={(e) => {
-            const v = Math.min(Number(e.target.value), valueMax);
-            onChangeMin(v);
-          }}
+          onChange={(e) => onChange(Math.min(Number(e.target.value), valueMax), valueMax)}
           aria-label={`Minimum ${label.toLowerCase()}`}
-          className="w-full"
         />
         <input
           type="range"
@@ -275,13 +291,13 @@ function RangeSlider({
           max={max}
           step={step}
           value={valueMax}
-          onChange={(e) => {
-            const v = Math.max(Number(e.target.value), valueMin);
-            onChangeMax(v);
-          }}
+          onChange={(e) => onChange(valueMin, Math.max(Number(e.target.value), valueMin))}
           aria-label={`Maximum ${label.toLowerCase()}`}
-          className="w-full"
         />
+      </div>
+      <div className="flex justify-between text-[11px] text-gray-600 tabular-nums mt-1">
+        <span>{min.toLocaleString()} {unit}</span>
+        <span>{max.toLocaleString()} {unit}</span>
       </div>
     </div>
   );

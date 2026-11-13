@@ -80,7 +80,7 @@ export const useAppStore = create<AppStore>((set, _get) => ({
   routes: [],
   tracks: {},
   tagLibrary: [],
-  isLoading: false,
+  isLoading: true,
   loadError: null,
   selectedRouteId: null,
   hoveredRouteId: null,
@@ -128,7 +128,8 @@ export const useAppStore = create<AppStore>((set, _get) => ({
   },
 
   selectRoute: (id) => {
-    set({ selectedRouteId: id, sidebarMode: id ? 'detail' : 'list' });
+    // Clear hover too: the card under the cursor unmounts without firing mouseleave.
+    set({ selectedRouteId: id, hoveredRouteId: null, sidebarMode: id ? 'detail' : 'list' });
   },
 
   hoverRoute: (id) => set({ hoveredRouteId: id }),

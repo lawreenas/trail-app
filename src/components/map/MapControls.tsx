@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Locate, LocateFixed } from 'lucide-react';
+import { Route, LocateFixed, Locate, Loader2 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { MapLayerPicker } from './MapThemeToggle';
 
 export function MapControls() {
   const showAll = useAppStore((s) => s.showAllTracks);
@@ -27,35 +28,36 @@ export function MapControls() {
   };
 
   return (
-    <div className="absolute top-16 right-4 z-[1000] flex flex-col gap-1.5">
-      <button
-        type="button"
-        onClick={() => setShowAll(!showAll)}
-        title={showAll ? 'Hide other tracks' : 'Show all tracks'}
-        aria-label={showAll ? 'Hide other tracks' : 'Show all tracks'}
-        className={`flex items-center justify-center w-9 h-9 rounded-md backdrop-blur-md border transition-colors shadow-lg ${
-          showAll
-            ? 'bg-black/60 border-white/10 text-white hover:bg-black/80'
-            : 'bg-black/60 border-white/10 text-gray-500 hover:text-white hover:bg-black/80'
-        }`}
-      >
-        {showAll ? <Eye size={15} /> : <EyeOff size={15} />}
-      </button>
-
-      <button
-        type="button"
-        onClick={handleLocate}
-        disabled={locating}
-        title="Center on my location"
-        aria-label="Center on my location"
-        className={`flex items-center justify-center w-9 h-9 rounded-md backdrop-blur-md border transition-colors shadow-lg ${
-          userLocation
-            ? 'bg-black/60 border-primary/30 text-primary hover:bg-black/80'
-            : 'bg-black/60 border-white/10 text-white hover:bg-black/80'
-        } ${locating ? 'animate-pulse' : ''}`}
-      >
-        {userLocation ? <LocateFixed size={15} /> : <Locate size={15} />}
-      </button>
+    <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+      <MapLayerPicker />
+      <div className="map-control-group">
+        <button
+          type="button"
+          onClick={() => setShowAll(!showAll)}
+          aria-pressed={showAll}
+          title={showAll ? 'Hide other routes' : 'Show all routes'}
+          aria-label={showAll ? 'Hide other routes' : 'Show all routes'}
+          className={`map-control ${showAll ? '' : 'text-gray-500'}`}
+        >
+          <Route size={17} />
+        </button>
+        <button
+          type="button"
+          onClick={handleLocate}
+          disabled={locating}
+          title="Show my location"
+          aria-label="Show my location"
+          className={`map-control ${userLocation ? 'text-primary' : ''}`}
+        >
+          {locating ? (
+            <Loader2 size={17} className="animate-spin" />
+          ) : userLocation ? (
+            <LocateFixed size={17} />
+          ) : (
+            <Locate size={17} />
+          )}
+        </button>
+      </div>
     </div>
   );
 }
