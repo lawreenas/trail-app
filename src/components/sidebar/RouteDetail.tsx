@@ -74,7 +74,6 @@ export function RouteDetail() {
               <Pencil size={16} />
             </button>
           )}
-          <ShareButton route={route} />
           <button
             type="button"
             onClick={() => toggleFavorite(route.id)}
@@ -244,8 +243,10 @@ function ShareButton({ route }: { route: TrailRoute }) {
       onClick={handleShare}
       title={copied ? 'Link copied' : 'Share route'}
       aria-label={copied ? 'Link copied' : 'Share route'}
-      className={`flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
-        copied ? 'text-primary' : 'text-gray-400 hover:text-white hover:bg-white/[0.06]'
+      className={`flex-[3] min-w-0 flex items-center justify-center h-11 rounded-lg border transition-colors ${
+        copied
+          ? 'border-primary/40 text-primary'
+          : 'border-white/[0.1] text-gray-200 hover:text-white hover:bg-white/[0.06]'
       }`}
     >
       {copied ? <Check size={16} /> : <Share2 size={16} />}
@@ -253,7 +254,7 @@ function ShareButton({ route }: { route: TrailRoute }) {
   );
 }
 
-/** Sticky footer: the main thing you do with a route is go run it. */
+/** Sticky footer: the main thing you do with a route is go run it. Flex weights ≈ 60 / 25 / 15. */
 function ActionBar({ route }: { route: TrailRoute }) {
   return (
     <div className="shrink-0 border-t border-white/[0.06] bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-2">
@@ -261,7 +262,7 @@ function ActionBar({ route }: { route: TrailRoute }) {
         href={navigateUrl(route.startPoint.lat, route.startPoint.lng)}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex-1 flex items-center justify-center gap-2 h-11 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary-hover transition-colors"
+        className="flex-[12] min-w-0 flex items-center justify-center gap-2 h-11 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary-hover transition-colors"
       >
         <Navigation size={15} strokeWidth={2.5} />
         Directions to start
@@ -285,6 +286,7 @@ function ActionBar({ route }: { route: TrailRoute }) {
           rel="noopener noreferrer"
         />
       )}
+      <ShareButton route={route} />
     </div>
   );
 }
@@ -307,7 +309,7 @@ function SecondaryAction({
     <a
       {...rest}
       title={title}
-      className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-lg border border-white/[0.1] text-sm font-medium text-gray-200 hover:text-white hover:bg-white/[0.06] transition-colors"
+      className="flex-[5] min-w-0 flex items-center justify-center gap-1.5 h-11 px-3 rounded-lg border border-white/[0.1] text-sm font-medium text-gray-200 hover:text-white hover:bg-white/[0.06] transition-colors"
     >
       <Icon size={15} />
       {label}

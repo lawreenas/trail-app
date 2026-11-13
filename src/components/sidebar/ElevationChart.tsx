@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo } from 'react';
+import { useEffect, useId, useMemo, useRef, type TouchEvent } from 'react';
 import {
   AreaChart,
   Area,
@@ -24,6 +24,23 @@ interface Props {
 
 const TICK_CANDIDATES = [0.5, 1, 2, 5, 10, 20, 50, 100];
 
+// Plot-area geometry, shared by the chart and the touch scrubber below.
+const CHART_MARGIN = { top: 6, right: 4, left: 0, bottom: 0 };
+const Y_AXIS_WIDTH = 48;
+
+/** Index of the profile point closest to `km` (profile is sorted by distance). */
+function nearestIndex(data: ElevationPoint[], km: number): number {
+  let lo = 0;
+  let hi = data.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (data[mid].distanceKm < km) lo = mid + 1;
+    else hi = mid;
+  }
+  if (lo > 0 && km - data[lo - 1].distanceKm < data[lo].distanceKm - km) return lo - 1;
+  return lo;
+}
+
 function buildTicks(totalKm: number): number[] {
   if (totalKm <= 0) return [0];
   // Aim for ~5 ticks; pick the smallest candidate step that gives ≤ 5 intervals
@@ -36,6 +53,7 @@ function buildTicks(totalKm: number): number[] {
 export function ElevationChart({ data, color, trackCoords, onActiveChange, height = 150 }: Props) {
   const setChartHoverPoint = useAppStore((s) => s.setChartHoverPoint);
   const gradientId = useId();
+  const containerRef = useRef<HTMLDivElement>(null);
   const totalKm = data.length ? data[data.length - 1].distanceKm : 0;
   const ticks = useMemo(() => buildTicks(totalKm), [totalKm]);
   const cumKm = useMemo(
@@ -64,6 +82,13 @@ export function ElevationChart({ data, color, trackCoords, onActiveChange, heigh
 
   if (data.length === 0) return null;
 
+  const activate = (point: ElevationPoint) => {
+    onActiveChange?.(point);
+    if (!trackCoords || !cumKm) return;
+    const coord = coordAtDistance(trackCoords, cumKm, point.distanceKm);
+    if (coord) setChartHoverPoint(coord);
+  };
+
   // Recharts v3 passes MouseHandlerDataParam — activeLabel is the X value
   // (our distanceKm). isTooltipActive tells us whether the cursor is over a
   // data point. activePayload no longer exists at this level in v3.
@@ -72,29 +97,47 @@ export function ElevationChart({ data, color, trackCoords, onActiveChange, heigh
     if (!s || !s.isTooltipActive || s.activeLabel == null) return;
     const km = typeof s.activeLabel === 'number' ? s.activeLabel : Number(s.activeLabel);
     if (!Number.isFinite(km)) return;
-    if (onActiveChange) {
-      const idx = Number(s.activeIndex);
-      const point = Number.isInteger(idx) ? data[idx] : data.find((p) => p.distanceKm === km);
-      if (point) onActiveChange(point);
-    }
-    if (!trackCoords || !cumKm) return;
-    const coord = coordAtDistance(trackCoords, cumKm, km);
-    if (coord) setChartHoverPoint(coord);
+    const idx = Number(s.activeIndex);
+    activate(Number.isInteger(idx) ? data[idx] : data[nearestIndex(data, km)]);
   };
 
-  const handleMouseLeave = () => {
+  const clearActive = () => {
     setChartHoverPoint(null);
     onActiveChange?.(null);
   };
 
+  // Touch scrubbing. Recharts doesn't fire onMouseMove for touch, and its own
+  // onTouchMove reports tooltip state a frame late — so map the finger's x
+  // position onto the plot area ourselves.
+  const handleTouch = (e: TouchEvent<HTMLDivElement>) => {
+    const touch = e.touches[0];
+    const el = containerRef.current;
+    if (!touch || !el) return;
+    const rect = el.getBoundingClientRect();
+    const plotLeft = rect.left + CHART_MARGIN.left + Y_AXIS_WIDTH;
+    const plotWidth = rect.width - CHART_MARGIN.left - Y_AXIS_WIDTH - CHART_MARGIN.right;
+    if (plotWidth <= 0) return;
+    const ratio = Math.min(1, Math.max(0, (touch.clientX - plotLeft) / plotWidth));
+    activate(data[nearestIndex(data, ratio * totalKm)]);
+  };
+
   return (
-    <div className="w-full select-none" style={{ height }}>
+    <div
+      ref={containerRef}
+      className="w-full select-none"
+      // pan-y: vertical swipes still scroll the sheet; horizontal drags scrub the profile.
+      style={{ height, touchAction: 'pan-y' }}
+      onTouchStart={handleTouch}
+      onTouchMove={handleTouch}
+      onTouchEnd={clearActive}
+      onTouchCancel={clearActive}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}
-          margin={{ top: 6, right: 4, left: 0, bottom: 0 }}
+          margin={CHART_MARGIN}
           onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
+          onMouseLeave={clearActive}
         >
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -120,7 +163,7 @@ export function ElevationChart({ data, color, trackCoords, onActiveChange, heigh
             tick={{ fill: '#71717a', fontSize: 11 }}
             tickLine={false}
             axisLine={false}
-            width={48}
+            width={Y_AXIS_WIDTH}
             tickFormatter={(v: number) => `${v} m`}
           />
           {/* Tooltip drives hover state; the readout is rendered by the parent. */}
