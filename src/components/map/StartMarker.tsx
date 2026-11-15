@@ -2,9 +2,9 @@ import { memo, useMemo } from 'react';
 import { Marker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppStore } from '../../store/useAppStore';
-import { effectiveRouteType, ROUTE_TYPE_LABEL } from '../../utils/routeMeta';
+import { effectiveRouteType, formatGain, ROUTE_TYPE_LABEL } from '../../utils/routeMeta';
 import { MAP_COLORS, type MapColors } from '../../utils/mapColors';
-import { formatDistance, formatElevation } from '../../utils/formatters';
+import { formatDistance } from '../../utils/formatters';
 import type { TrailRoute } from '../../types';
 
 interface Props {
@@ -89,7 +89,7 @@ function StartMarkerImpl({ route }: Props) {
           <div className="flex items-center gap-2 text-[11px] tabular-nums opacity-80">
             <span>{formatDistance(route.metrics.distanceKm)}</span>
             <span className="opacity-50">·</span>
-            <span>↑ {formatElevation(route.metrics.elevationGainM)}</span>
+            <span>{formatGain(route)}</span>
           </div>
           {route.type && (
             <div className="text-[10px] uppercase tracking-wider opacity-60">

@@ -1,16 +1,18 @@
 #!/usr/bin/env node
-// Reads all .gpx files from data/gpx/, computes metrics, writes public/routes-data.json
+// Reads all .gpx files from public/gpx/, computes metrics, writes public/routes-data.json.
+// Merges with the existing data file: metadata edited in admin (name, tags, type…) and
+// manually overridden elevation gain/loss are kept; GPX-derived fields are refreshed.
 
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { analyzeTrack } from '../src/utils/elevation.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = join(__dirname, '..');
 const GPX_DIR = join(ROOT, 'public', 'gpx');
 const OUT_DATA = join(ROOT, 'public', 'routes-data.json');
 const OUT_TRACKS = join(ROOT, 'public', 'routes-tracks.json');
-const PROFILE_TARGET_POINTS = 120; // downsample elevation profile
 const TRACK_SIMPLIFY_TOLERANCE = 0.00006; // ~6m at this latitude — keeps shape, drops detail
 
 // ─── minimal GPX parser ──────────────────────────────────────────────────────
@@ -38,82 +40,6 @@ function parseGpx(xml) {
   }
 
   return { name, coords };
-}
-
-// ─── metrics (mirrors src/utils/gpxMetrics.ts) ───────────────────────────────
-
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const toRad = (d) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-// Smooth a numeric array using a centered moving average
-function smooth(values, window = 15) {
-  const half = Math.floor(window / 2);
-  return values.map((_, i) => {
-    const slice = values.slice(Math.max(0, i - half), Math.min(values.length, i + half + 1));
-    return slice.reduce((s, v) => s + v, 0) / slice.length;
-  });
-}
-
-function computeMetrics(coords) {
-  // Separate elevation for smoothing
-  const rawEles = coords.map(c => c[2]);
-  const hasEle = rawEles.some(e => e !== undefined);
-  const smoothedEles = hasEle
-    ? smooth(rawEles.map(e => e ?? 0))
-    : rawEles;
-
-  let distanceKm = 0, gainM = 0, lossM = 0;
-  let maxEle = -Infinity, minEle = Infinity;
-  const profile = [];
-
-  for (let i = 0; i < coords.length; i++) {
-    const [lon, lat] = coords[i];
-    const ele = hasEle ? smoothedEles[i] : undefined;
-
-    if (i > 0) {
-      const [pLon, pLat] = coords[i - 1];
-      distanceKm += haversineKm(pLat, pLon, lat, lon);
-      if (ele !== undefined) {
-        const d = ele - smoothedEles[i - 1];
-        if (d > 0) gainM += d; else lossM += Math.abs(d);
-      }
-    }
-    if (ele !== undefined) {
-      maxEle = Math.max(maxEle, ele);
-      minEle = Math.min(minEle, ele);
-      profile.push({ distanceKm: Math.round(distanceKm * 100) / 100, elevationM: Math.round(ele) });
-    }
-  }
-
-  return {
-    metrics: {
-      distanceKm: Math.round(distanceKm * 10) / 10,
-      elevationGainM: Math.round(gainM),
-      elevationLossM: Math.round(lossM),
-      elevationMaxM: maxEle === -Infinity ? 0 : Math.round(maxEle),
-      elevationMinM: minEle === Infinity ? 0 : Math.round(minEle),
-    },
-    elevationProfile: profile,
-  };
-}
-
-// ─── elevation profile downsampling ──────────────────────────────────────────
-
-function downsampleProfile(profile, target) {
-  if (profile.length <= target) return profile;
-  const step = (profile.length - 1) / (target - 1);
-  const out = [];
-  for (let i = 0; i < target; i++) {
-    out.push(profile[Math.round(i * step)]);
-  }
-  return out;
 }
 
 // ─── geometry simplification (Douglas-Peucker) ───────────────────────────────
@@ -177,6 +103,14 @@ function filenameFallback(filename) {
 const files = (await readdir(GPX_DIR)).filter((f) => f.toLowerCase().endsWith('.gpx')).sort();
 console.log(`Processing ${files.length} GPX files…\n`);
 
+let previous = { routes: [] };
+try {
+  previous = JSON.parse(await readFile(OUT_DATA, 'utf8'));
+} catch {
+  // first import — nothing to merge
+}
+const previousById = new Map(previous.routes.map((r) => [r.id, r]));
+
 const routes = [];
 const tracks = {};
 const now = new Date().toISOString();
@@ -192,33 +126,40 @@ for (const file of files) {
     continue;
   }
 
-  const { metrics, elevationProfile } = computeMetrics(coords);
+  const { metrics, elevationProfile } = analyzeTrack(coords);
   const [startLng, startLat] = coords[0];
   const displayName = name || filenameFallback(file);
-
-  // Downsample elevation profile so the chart is fast and the JSON stays small
-  const downsampled = downsampleProfile(elevationProfile, PROFILE_TARGET_POINTS);
 
   // Stable id derived from filename so re-imports don't break share links or
   // metadata edits that key off the route id.
   const id = basename(file, '.gpx');
+  const prev = previousById.get(id);
 
-  const route = {
-    id,
-    name: displayName,
-    description: '',
-    type: 'loop',
-    region: 'Vilnius',
-    tags: [],
-    startPoint: { lat: startLat, lng: startLng },
-    metrics,
-    elevationProfile: downsampled,
-    // Note: full geometry is intentionally NOT embedded here — it's lazy-loaded
-    // from /gpx/<filename> at the moment a route is selected.
-    gpxFileName: file,
-    uploadedAt: now,
-    updatedAt: now,
-  };
+  const route = prev
+    ? {
+        ...prev,
+        startPoint: { lat: startLat, lng: startLng },
+        metrics: prev.elevationManual
+          ? { ...metrics, elevationGainM: prev.metrics.elevationGainM, elevationLossM: prev.metrics.elevationLossM }
+          : metrics,
+        elevationProfile,
+      }
+    : {
+        id,
+        name: displayName,
+        description: '',
+        type: 'loop',
+        region: 'Vilnius',
+        tags: [],
+        startPoint: { lat: startLat, lng: startLng },
+        metrics,
+        elevationProfile,
+        // Note: full geometry is intentionally NOT embedded here — it's lazy-loaded
+        // from /gpx/<filename> at the moment a route is selected.
+        gpxFileName: file,
+        uploadedAt: now,
+        updatedAt: now,
+      };
 
   // Simplified track for the overview map (one record per route)
   const simplified = simplifyTrack(coords, TRACK_SIMPLIFY_TOLERANCE);
@@ -228,7 +169,7 @@ for (const file of files) {
 
   routes.push(route);
   console.log(
-    `  ✓ ${displayName.padEnd(45)} ${metrics.distanceKm}km  ↑${metrics.elevationGainM}m  pts ${coords.length}→${simplified.length}`
+    `  ${prev ? '↻' : '+'} ${route.name.padEnd(45)} ${route.metrics.distanceKm}km  ↑${route.metrics.elevationGainM}m${route.elevationManual ? ' (manual)' : ''}  pts ${coords.length}→${simplified.length}`
   );
 }
 
@@ -236,6 +177,7 @@ const dataOut = {
   version: 1,
   exportedAt: now,
   routes: routes.sort((a, b) => a.name.localeCompare(b.name)),
+  ...(previous.tags ? { tags: previous.tags } : {}),
 };
 
 const tracksOut = {

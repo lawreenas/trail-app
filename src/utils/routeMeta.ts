@@ -1,5 +1,5 @@
 import { RefreshCw, ArrowRight, Flag, Triangle, type LucideIcon } from 'lucide-react';
-import type { RouteType } from '../types';
+import type { RouteType, TrailRoute } from '../types';
 
 export const ROUTE_TYPES: RouteType[] = ['loop', 'point-to-point', 'race', 'hill-repeats'];
 
@@ -20,6 +20,16 @@ export const ROUTE_TYPE_ICON: Record<RouteType, LucideIcon> = {
 /** Returns the route's type or a sensible default for visual fallbacks. */
 export function effectiveRouteType(t: RouteType | undefined): RouteType {
   return t ?? 'loop';
+}
+
+/** False when the GPX had no elevation data and nobody entered gain/loss by hand. */
+export function hasElevation(route: TrailRoute): boolean {
+  return route.elevationProfile.length > 0 || !!route.elevationManual;
+}
+
+/** "↑ 522 m", or "↑ —" when the route has no elevation data. */
+export function formatGain(route: TrailRoute): string {
+  return hasElevation(route) ? `↑ ${route.metrics.elevationGainM.toLocaleString()} m` : '↑ —';
 }
 
 /** Preset palette for tag colors. Curated for legibility on the dark surface. */

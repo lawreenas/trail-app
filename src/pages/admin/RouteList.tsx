@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { formatDistance, formatElevation } from '../../utils/formatters';
-import { ROUTE_TYPE_LABEL, tagColor } from '../../utils/routeMeta';
+import { formatDistance } from '../../utils/formatters';
+import { ROUTE_TYPE_LABEL, formatGain, tagColor } from '../../utils/routeMeta';
 import type { TrailRoute } from '../../types';
 
 interface Props {
@@ -169,10 +169,7 @@ function RouteRow({ route, onEdit }: { route: TrailRoute; onEdit: () => void }) 
           <div className="flex flex-col items-end gap-1 text-right shrink-0">
             <div className="flex items-baseline gap-3 text-sm font-medium text-white tabular-nums">
               <span>{formatDistance(route.metrics.distanceKm)}</span>
-              <span>
-                <span className="text-gray-500 font-normal mr-1">↑</span>
-                {formatElevation(route.metrics.elevationGainM)}
-              </span>
+              <span>{formatGain(route)}</span>
             </div>
             {route.type && (
               <span className="text-[11px] text-gray-500">{ROUTE_TYPE_LABEL[route.type]}</span>

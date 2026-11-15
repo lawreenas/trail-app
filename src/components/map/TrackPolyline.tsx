@@ -2,8 +2,9 @@ import { memo, useMemo, useRef, useEffect } from 'react';
 import { Polyline, Tooltip } from 'react-leaflet';
 import type { LatLngExpression } from 'leaflet';
 import { useAppStore } from '../../store/useAppStore';
-import { formatDistance, formatElevation } from '../../utils/formatters';
+import { formatDistance } from '../../utils/formatters';
 import { MAP_COLORS } from '../../utils/mapColors';
+import { formatGain } from '../../utils/routeMeta';
 import type { LngLat, TrailRoute } from '../../types';
 
 interface Props {
@@ -75,7 +76,7 @@ function TrackPolylineImpl({ routeId, coords, route }: Props) {
             <div className="flex items-center gap-2 text-[11px] tabular-nums opacity-80">
               <span>{formatDistance(route.metrics.distanceKm)}</span>
               <span className="opacity-50">·</span>
-              <span>↑ {formatElevation(route.metrics.elevationGainM)}</span>
+              <span>{formatGain(route)}</span>
             </div>
           </div>
         </Tooltip>

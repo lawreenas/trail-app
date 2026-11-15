@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { UploadZone } from './UploadZone';
@@ -32,6 +32,12 @@ function AdminShell() {
     initialEditRoute ? { kind: 'edit', route: initialEditRoute } : { kind: 'list' }
   );
 
+  // Each screen (list, editor, export) starts at the top rather than inheriting the list's scroll.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [view, mode.kind]);
+
   const goToList = () => setMode({ kind: 'list' });
   const switchView = (next: View) => {
     setView(next);
@@ -39,7 +45,8 @@ function AdminShell() {
   };
 
   return (
-    <div className="min-h-screen bg-surface text-white">
+    // body is overflow-hidden (for the full-screen map), so admin scrolls inside its own container.
+    <div ref={scrollRef} className="h-dvh overflow-y-auto bg-surface text-white">
       <header className="border-b border-white/[0.06]">
         <div className="max-w-5xl mx-auto px-6 sm:px-10 py-5 flex items-center justify-between">
           <div className="flex items-baseline gap-3">
@@ -183,7 +190,7 @@ function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+    <div className="h-dvh overflow-y-auto bg-surface flex items-center justify-center p-4">
       <div className="w-full max-w-xs space-y-6">
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-white">Admin</h1>

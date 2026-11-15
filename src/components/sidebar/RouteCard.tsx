@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { Heart } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { formatDistance, formatElevation } from '../../utils/formatters';
-import { ROUTE_TYPE_ICON, ROUTE_TYPE_LABEL, tagColor } from '../../utils/routeMeta';
+import { formatDistance } from '../../utils/formatters';
+import { ROUTE_TYPE_ICON, ROUTE_TYPE_LABEL, formatGain, tagColor } from '../../utils/routeMeta';
 import { MAP_COLORS } from '../../utils/mapColors';
 import { Sparkline } from '../ui/Sparkline';
 import type { TrailRoute } from '../../types';
@@ -23,7 +23,7 @@ function RouteCardImpl({ route }: Props) {
 
   const highlighted = isSelected || isHovered;
   const TypeIcon = route.type ? ROUTE_TYPE_ICON[route.type] : null;
-  const { distanceKm, elevationGainM } = route.metrics;
+  const { distanceKm } = route.metrics;
 
   return (
     <li>
@@ -74,7 +74,7 @@ function RouteCardImpl({ route }: Props) {
               )}
               <span className="text-gray-200 font-medium">{formatDistance(distanceKm)}</span>
               <Dot />
-              <span>↑ {formatElevation(elevationGainM)}</span>
+              <span>{formatGain(route)}</span>
             </div>
 
             {route.tags.length > 0 && (

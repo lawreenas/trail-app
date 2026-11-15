@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { v4 as uuid } from 'uuid';
+import { RefreshCw } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { analyzeGpxText } from '../../services/gpxParser';
+import { gpxUrl } from '../../services/gpxLoader';
 import { formatDistance, formatElevation } from '../../utils/formatters';
 import { ROUTE_TYPES, ROUTE_TYPE_LABEL } from '../../utils/routeMeta';
 import { TagInput } from './TagInput';
-import type { RouteType, TrailRoute } from '../../types';
+import type { ElevationPoint, RouteMetrics, RouteType, TrailRoute } from '../../types';
 
 type PartialUpload = Omit<TrailRoute, 'name' | 'description' | 'region' | 'tags' | 'source'>;
 
@@ -20,6 +23,12 @@ interface Props {
 const tagsEqual = (a: string[], b: string[]) =>
   a.length === b.length && a.every((v, i) => v === b[i]);
 
+/** Whole, non-negative metres — or null if the field isn't a valid value. */
+function parseMetres(value: string): number | null {
+  if (!/^\d+$/.test(value.trim())) return null;
+  return Number(value.trim());
+}
+
 export function RouteEditor({ partial, onSaved, onCancel, existing, onDeleted }: Props) {
   const upsertRoute = useAppStore((s) => s.upsertRoute);
   const deleteRoute = useAppStore((s) => s.deleteRoute);
@@ -29,6 +38,9 @@ export function RouteEditor({ partial, onSaved, onCancel, existing, onDeleted }:
   const initialType: RouteType = existing?.type ?? partial.type ?? 'loop';
   const initialTerrain = existing?.terrain ?? '';
   const initialLink = existing?.link ?? '';
+  const initialGain = String(partial.metrics.elevationGainM);
+  const initialLoss = String(partial.metrics.elevationLossM);
+  const initialManual = existing?.elevationManual ?? false;
 
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(existing?.description ?? '');
@@ -37,6 +49,13 @@ export function RouteEditor({ partial, onSaved, onCancel, existing, onDeleted }:
   const [link, setLink] = useState(initialLink);
   const [tags, setTags] = useState<string[]>(initialTags);
   const [routeType, setRouteType] = useState<RouteType>(initialType);
+  const [gain, setGain] = useState(initialGain);
+  const [loss, setLoss] = useState(initialLoss);
+  const [elevationManual, setElevationManual] = useState(initialManual);
+  // Fresh metrics + profile from "Recalculate from GPX"; null until the button is used.
+  const [recalculated, setRecalculated] = useState<{ metrics: RouteMetrics; elevationProfile: ElevationPoint[] } | null>(null);
+  const [recalculating, setRecalculating] = useState(false);
+  const [recalcError, setRecalcError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -49,14 +68,51 @@ export function RouteEditor({ partial, onSaved, onCancel, existing, onDeleted }:
     terrain !== initialTerrain ||
     link !== initialLink ||
     !tagsEqual(tags, initialTags) ||
-    routeType !== initialType;
+    routeType !== initialType ||
+    gain !== initialGain ||
+    loss !== initialLoss ||
+    elevationManual !== initialManual ||
+    recalculated !== null;
 
-  const canSave = !!name.trim() && (isEdit ? dirty : true);
+  const gainM = parseMetres(gain);
+  const lossM = parseMetres(loss);
+  const elevationValid = gainM !== null && lossM !== null;
+  const canSave = !!name.trim() && elevationValid && (isEdit ? dirty : true);
 
   const markDirty = () => setJustSaved(false);
 
+  const editElevation = (setter: (v: string) => void, value: string) => {
+    setter(value);
+    setElevationManual(true);
+    markDirty();
+  };
+
+  const handleRecalculate = async () => {
+    setRecalculating(true);
+    setRecalcError(null);
+    try {
+      // Uploaded routes carry their GPX text; published ones are fetched from /gpx/.
+      let text = partial.gpxText;
+      if (text === undefined) {
+        const res = await fetch(gpxUrl(partial.gpxFileName));
+        if (!res.ok) throw new Error(`Couldn’t load ${partial.gpxFileName} (${res.status})`);
+        text = await res.text();
+      }
+      const result = analyzeGpxText(text);
+      setRecalculated(result);
+      setGain(String(result.metrics.elevationGainM));
+      setLoss(String(result.metrics.elevationLossM));
+      setElevationManual(false);
+      markDirty();
+    } catch (err) {
+      setRecalcError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setRecalculating(false);
+    }
+  };
+
   const handleSave = async () => {
-    if (!canSave) return;
+    if (!canSave || gainM === null || lossM === null) return;
     setSaving(true);
     const trimmedTerrain = terrain.trim();
     const trimmedLink = link.trim();
@@ -70,6 +126,13 @@ export function RouteEditor({ partial, onSaved, onCancel, existing, onDeleted }:
       type: routeType,
       terrain: trimmedTerrain || undefined,
       link: trimmedLink || undefined,
+      metrics: {
+        ...(recalculated?.metrics ?? partial.metrics),
+        elevationGainM: gainM,
+        elevationLossM: lossM,
+      },
+      elevationProfile: recalculated?.elevationProfile ?? partial.elevationProfile,
+      elevationManual: elevationManual || undefined,
       source: 'local',
       uploadedAt: existing?.uploadedAt ?? partial.uploadedAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -95,7 +158,7 @@ export function RouteEditor({ partial, onSaved, onCancel, existing, onDeleted }:
     <div className="space-y-10">
       <div className="grid grid-cols-2 gap-x-8 text-sm tabular-nums border-y border-white/[0.06] py-4">
         <Metric label="Distance" value={formatDistance(partial.metrics.distanceKm)} />
-        <Metric label="Elevation gain" value={formatElevation(partial.metrics.elevationGainM)} />
+        <Metric label="Elevation" value={elevationValid ? `↑ ${formatElevation(gainM)}  ↓ ${formatElevation(lossM)}` : '—'} />
       </div>
 
       <div className="space-y-6">
@@ -125,6 +188,43 @@ export function RouteEditor({ partial, onSaved, onCancel, existing, onDeleted }:
                 {ROUTE_TYPE_LABEL[t]}
               </button>
             ))}
+          </div>
+        </Field>
+
+        <Field label="Elevation" hint={elevationManual ? 'Set manually' : 'Calculated from GPX'}>
+          <div className="space-y-2">
+            <div className="flex items-end gap-3 flex-wrap">
+              <MetresInput
+                label="Gain"
+                value={gain}
+                invalid={gainM === null}
+                onChange={(v) => editElevation(setGain, v)}
+              />
+              <MetresInput
+                label="Loss"
+                value={loss}
+                invalid={lossM === null}
+                onChange={(v) => editElevation(setLoss, v)}
+              />
+              <button
+                type="button"
+                onClick={handleRecalculate}
+                disabled={recalculating}
+                className="flex items-center gap-2 h-[42px] px-3 rounded-md border border-white/[0.08] text-xs font-medium text-gray-300 hover:text-white hover:border-white/20 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw size={13} className={recalculating ? 'animate-spin' : ''} />
+                {recalculating ? 'Calculating…' : 'Recalculate from GPX'}
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-500">
+              {recalcError ? (
+                <span className="text-red-400">{recalcError}</span>
+              ) : elevationManual ? (
+                'Your values are kept when routes are re-imported. Recalculate to go back to the GPX values.'
+              ) : (
+                'Smoothed from the GPX track. Type a value to override it; recalculating also refreshes the elevation chart.'
+              )}
+            </p>
           </div>
         </Field>
 
@@ -248,6 +348,35 @@ export function RouteEditor({ partial, onSaved, onCancel, existing, onDeleted }:
         </div>
       )}
     </div>
+  );
+}
+
+function MetresInput({
+  label,
+  value,
+  invalid,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  invalid: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="block text-[11px] text-gray-500 mb-1">{label}</span>
+      <span className="relative block">
+        <input
+          type="text"
+          inputMode="numeric"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          aria-invalid={invalid}
+          className={`${inputClass} w-28 pr-8 tabular-nums ${invalid ? '!border-red-500/60' : ''}`}
+        />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">m</span>
+      </span>
+    </label>
   );
 }
 

@@ -19,7 +19,7 @@ import {
   formatDistance,
   formatElevation,
 } from '../../utils/formatters';
-import { ROUTE_TYPE_LABEL, ROUTE_TYPE_ICON, effectiveRouteType, tagColor } from '../../utils/routeMeta';
+import { ROUTE_TYPE_LABEL, ROUTE_TYPE_ICON, effectiveRouteType, hasElevation, tagColor } from '../../utils/routeMeta';
 import { MAP_COLORS } from '../../utils/mapColors';
 import { gpxUrl } from '../../services/gpxLoader';
 import type { ElevationPoint, TrailRoute } from '../../types';
@@ -127,8 +127,8 @@ export function RouteDetail() {
 
         <section className="mx-5 grid grid-cols-3 rounded-xl bg-white/[0.03] border border-white/[0.06] divide-x divide-white/[0.06]">
           <HeroStat label="Distance" parts={distanceParts(m.distanceKm)} />
-          <HeroStat label="Elevation gain" parts={elevationParts(m.elevationGainM)} />
-          <HeroStat label="Elevation loss" parts={elevationParts(m.elevationLossM)} />
+          <HeroStat label="Elevation gain" parts={hasElevation(route) ? elevationParts(m.elevationGainM) : ['—', '']} />
+          <HeroStat label="Elevation loss" parts={hasElevation(route) ? elevationParts(m.elevationLossM) : ['—', '']} />
         </section>
 
         {route.elevationProfile.length > 0 && (
@@ -157,13 +157,19 @@ export function RouteDetail() {
           </section>
         )}
 
-        <section className="px-5 pt-6">
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-4 border-y border-white/[0.05] py-4">
-            <DetailStat label="Highest point" value={formatElevation(m.elevationMaxM)} />
-            <DetailStat label="Lowest point" value={formatElevation(m.elevationMinM)} />
-            {route.terrain && <DetailStat label="Terrain" value={route.terrain} wide />}
-          </dl>
-        </section>
+        {(route.elevationProfile.length > 0 || route.terrain) && (
+          <section className="px-5 pt-6">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-4 border-y border-white/[0.05] py-4">
+              {route.elevationProfile.length > 0 && (
+                <>
+                  <DetailStat label="Highest point" value={formatElevation(m.elevationMaxM)} />
+                  <DetailStat label="Lowest point" value={formatElevation(m.elevationMinM)} />
+                </>
+              )}
+              {route.terrain && <DetailStat label="Terrain" value={route.terrain} wide />}
+            </dl>
+          </section>
+        )}
 
         {route.description && (
           <section className="px-5 pt-6">

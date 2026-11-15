@@ -31,6 +31,8 @@ export interface TrailRoute {
   tags: string[];
   startPoint: { lat: number; lng: number };
   metrics: RouteMetrics;
+  /** True when elevationGainM/LossM were entered by hand in admin instead of calculated from the GPX. */
+  elevationManual?: boolean;
   elevationProfile: ElevationPoint[];
   /** Lazy-loaded for public routes (fetched from /gpx/<filename> when selected). Always present for local admin uploads. */
   geoJson?: GeoJSON.Feature;
