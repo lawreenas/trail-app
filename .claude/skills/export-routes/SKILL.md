@@ -1,11 +1,11 @@
 ---
 name: export-routes
-description: Publish exported trail route data — copy routes-data.json, routes-tracks.json and dist/gpx/*.gpx from dist/ into public/ (overwriting), verify, then commit and push. Use when the user asks to export, publish or sync routes, or says they put an admin export into dist/.
+description: Publish exported trail route data — copy routes-data.json, routes-tracks.json and dist/gpx/*.gpx from dist/ into public/ (overwriting), verify, then commit and push. Use when the user asks to export, save, publish or sync routes, or says route data changed in dist/.
 ---
 
 # Export routes (dist/ → public/)
 
-Moves route data from `dist/` into `public/`, where the app and the GitHub Pages deploy read it from.
+Route JSON edited in `dist/` is lost on the next `npm run build`. This saves it into `public/` — the source the app and the GitHub Pages deploy read from.
 
 | Source | Destination |
 |---|---|
@@ -17,7 +17,7 @@ GPX files that exist in `public/gpx/` but not in `dist/gpx/` are left alone. Rem
 
 ## Watch out
 
-`npm run build` rebuilds `dist/` from `public/` and **overwrites any export placed in dist/**. If `dist/` was built after the export was dropped in, the data there is just a copy of `public/` — step 2 will catch that (no changes).
+`npm run build` rebuilds `dist/` from `public/` and **overwrites any changes made in dist/**. Never build before step 3. If `dist/` was rebuilt since the edits, the data there is just a copy of `public/` — step 2 will catch that (no changes).
 
 ## Steps
 
