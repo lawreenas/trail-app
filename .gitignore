@@ -3,4 +3,6 @@ dist
 .env
 .env.local
 *.local
-.claude/
+# Local Claude settings stay private; shared project skills are committed
+.claude/*
+!.claude/skills/
